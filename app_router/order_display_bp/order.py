@@ -32,10 +32,8 @@ def get_outbound_stock_all_data():
     # 获取出库库存数据
     outbound_stock_obj_list = order_crud.cal_outbound_stock_list()
     outbound_stock_obj_list = [_.get("product_obj") for _ in outbound_stock_obj_list]
-    # 统一转换成时间戳的形式
-    data_list = time_to_timestamp(outbound_stock_obj_list)
     # 搜索
-    data_list = search_stock_product(data_list, product_name)
+    data_list = search_stock_product(outbound_stock_obj_list, product_name)
     # 按数量排序
     data_list = order_stock_data_list(data_list)
 
@@ -66,10 +64,8 @@ def get_purchase_stock_all_data():
     # 获取入库库存数据
     purchase_stock_obj_list = order_crud.cal_purchase_stock_list()
     purchase_stock_obj_list = [_.get("product_obj") for _ in purchase_stock_obj_list]
-    # 统一转换成时间戳的形式
-    data_list = time_to_timestamp(purchase_stock_obj_list)
     # 搜索
-    data_list = search_stock_product(data_list, product_name)
+    data_list = search_stock_product(purchase_stock_obj_list, product_name)
     # 按数量排序
     data_list = order_stock_data_list(data_list)
 
@@ -97,10 +93,8 @@ def get_stock_all_data():
 
     # 获取所有的库存数据
     stock_obj_list = order_crud.cal_stock_list()
-    # 统一转换成时间戳的形式
-    data_list = time_to_timestamp(stock_obj_list)
     # 搜索
-    data_list = search_stock_product(data_list, product_name)
+    data_list = search_stock_product(stock_obj_list, product_name)
     # 按数量排序
     data_list = order_stock_data_list(data_list)
 
@@ -142,7 +136,7 @@ def get_purchase_stock_data_list():
     # 前端page从1开始
     page -= 1
     page = page * limit
-    paginate_list = data_list[page: page+limit]
+    paginate_list = data_list[page: page + limit]
     return_data = {
         "Success": True,
         "code": 2000,
@@ -182,7 +176,7 @@ def get_outbound_stock_data_list():
     # 前端page从1开始
     page -= 1
     page = page * limit
-    paginate_list = data_list[page: page+limit]
+    paginate_list = data_list[page: page + limit]
     return_data = {
         "Success": True,
         "code": 2000,
@@ -219,7 +213,7 @@ def get_stock_data_list():
     # 前端page从1开始
     page -= 1
     page = page * limit
-    paginate_list = data_list[page: page+limit]
+    paginate_list = data_list[page: page + limit]
     return_data = {
         "Success": True,
         "code": 2000,
@@ -465,7 +459,7 @@ def get_purchase_product_details():
     result = order_crud.get_products_by_purchase_order_id(data_id=purchase_order_id)
     result_data = result.get("data")
     for data_obj in result_data:
-        purchase_product_id = data_obj.product_id
+        purchase_product_id = data_obj.get('product_id')
         product_obj = crud.get_product_by_business_id(business_id=purchase_product_id)
 
         _dict = {
@@ -476,9 +470,9 @@ def get_purchase_product_details():
             "unit_price": product_obj.unit_price,
             "img_url": product_obj.img_url,
             "thumb_img_url": product_obj.thumb_img_url,
-            "quantity": data_obj.quantity,
-            "subtotal_price": data_obj.subtotal_price,
-            "remarks": data_obj.remarks
+            "quantity": data_obj.get('quantity'),
+            "subtotal_price": data_obj.get('subtotal_price'),
+            "remarks": data_obj.get('remarks')
         }
         data_list.append(_dict)
 
@@ -617,11 +611,7 @@ def get_outbound_product_details():
     )
 
     result = order_crud.get_products_by_outbound_order_id(data_id=outbound_order_id)
-    result_data = result.get("data")
-    data_list = []
-    for _ in result_data:
-        _dict = _.as_dict()
-        data_list.append(_dict)
+    data_list = result.get("data")
 
     for data_obj in data_list:
         dealer_product_id = data_obj.get('dealer_product_id')

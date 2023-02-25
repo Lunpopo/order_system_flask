@@ -74,6 +74,17 @@ def init_db_data():
     if not user_crud.get_user_by_name(username='admin'):
         user_crud.add_user(data=user_data)
 
+    # 注册编辑人员用户
+    user_data = {
+        "username": "editor",
+        "password": pwd_context.hash("111111"),
+        "group_id": user_crud.get_group_by_name(group_name=0).business_id,
+        "register_ip": get_current_ip(),
+        "status": 0
+    }
+    if not user_crud.get_user_by_name(username='editor'):
+        user_crud.add_user(data=user_data)
+
 
 if __name__ == '__main__':
     app.config.from_object(config)

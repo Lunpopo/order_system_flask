@@ -322,7 +322,6 @@ def product_multi_delete():
         )
 
 
-# TODO 要改
 @data_bp.route("/get_all_dealer_product_data", methods=["GET"])
 def get_all_dealer_product_data():
     """
@@ -338,17 +337,9 @@ def get_all_dealer_product_data():
         "/get_all_dealer_product_data 前端的入参参数：\n{}".format(json.dumps(params_dict, indent=4, ensure_ascii=False))
     )
 
-    # 前端page从1开始
-    if order_by:
-        result = crud.get_all_dealer_product(product_name=product_name, dealer_name=dealer_name, order_by=order_by)
-    else:
-        result = crud.get_all_dealer_product(product_name=product_name, dealer_name=dealer_name)
-
-    result_data = result.get("data")
-    # json格式化
-    data_list = [_.as_dict() for _ in result_data]
-    # 统一转换成时间戳的形式
-    data_list = time_to_timestamp(data_list)
+    result = crud.get_all_dealer_product(product_name=product_name, dealer_name=dealer_name, order_by=order_by)
+    result_data = result.get('data')
+    data_list = format_dealer_product(result_data)
 
     return_data = {
         "Success": True,

@@ -113,6 +113,19 @@ class AuthGroup(db.Model):
     def __repr__(self):
         return '<AuthGroup %r>' % self.group_name
 
+    def as_dict(self):
+        """
+        输出为 dict
+        :return:
+        """
+        _dict = {}
+        for c in self.__table__.columns:
+            if not isinstance(c.type, db.Enum):
+                _dict[c.name] = getattr(self, c.name)
+            else:
+                _dict[c.name] = getattr(self, c.name).name
+        return _dict
+
 
 class AuthApi(db.Model):
     """
@@ -122,9 +135,26 @@ class AuthApi(db.Model):
 
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()), unique=True,
                    nullable=False, comment="哈希自动生成id")
-    api_name = db.Column(
-        db.String(150), unique=True, index=True, comment="api的字段名，例如：/user/get_group_data", nullable=False
+    api_parent_id = db.Column(db.String(36), comment="菜单的父级-树形结构")
+    title = db.Column(db.String(150), comment="api的title名字，例如：货单表格", nullable=False)
+    description = db.Column(db.Text, comment="api的描述信息")
+    icon = db.Column(db.String(50), comment="api的icon字段，例如：table")
+    menu_type = db.Column(db.Integer, comment="菜单的等级，一级菜单为0，二级菜单为1，后面的类推", nullable=False)
+    hidden = db.Column(db.Integer, comment="是否隐藏，0为不隐藏，1为隐藏", default=0, nullable=False)
+    permission = db.Column(
+        db.String(50), comment="此api的权限，用:隔开，例如：99:0 就是只允许admin和editor的权限",
+        default="0", nullable=False
     )
+
+    # api_name = db.Column(
+    #     db.String(150), unique=True, index=True, comment="api的字段名，例如：/user/get_group_data", nullable=False
+    # )
+
+    router_path = db.Column(
+        db.String(150), comment="路由路径，例如：/user/get_group_data，子路由就与父路由的路径进行拼接",
+        unique=True, index=True, nullable=False
+    )
+    component_path = db.Column(db.String(150), comment="组件路径，例如：views/product/myself-price-list", nullable=False)
 
     # 公共字段
     is_delete = db.Column(db.Integer, default=0, nullable=False,
@@ -141,7 +171,20 @@ class AuthApi(db.Model):
                             comment="业务id（使用雪花算法生成唯一id）")
 
     def __repr__(self):
-        return '<AuthApi %r>' % self.api_name
+        return '<AuthApi %r>' % self.title
+
+    def as_dict(self):
+        """
+        输出为 dict
+        :return:
+        """
+        _dict = {}
+        for c in self.__table__.columns:
+            if not isinstance(c.type, db.Enum):
+                _dict[c.name] = getattr(self, c.name)
+            else:
+                _dict[c.name] = getattr(self, c.name).name
+        return _dict
 
 
 class AuthGroupApiRelation(db.Model):

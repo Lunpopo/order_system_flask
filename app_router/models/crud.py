@@ -6,6 +6,11 @@ from app_router.models.models import ProductList, DealerProductList, DealerList
 from enums.enums import OrderNameEnum
 
 
+# 别名
+A = aliased(DealerProductList)
+B = aliased(ProductList)
+
+
 def get_product_list_limit(page: int = 0, limit: int = 100, order_by='-update_time'):
     """
     获取产品列表-用于表格数据
@@ -71,70 +76,6 @@ def get_all_product(order_by='-update_time'):
     return {"data": result_list, "count": ProductList.query.count()}
 
 
-def get_dealer_product_list_limit(dealer_name, page: int = 0, limit: int = 100, order_by='-update_time'):
-    """
-    获取经销商产品列表
-    :param dealer_name: 经销商名字
-    :param page: 当前页
-    :param limit: 每页多少条数据
-    :param order_by: 排序，例如："+product_name"
-    :return:
-    """
-    if not dealer_name:
-        if order_by.startswith('-'):
-            # 降序
-            order_name = order_by.split("-")[-1]
-            if order_name in OrderNameEnum.__members__:
-                result_list = DealerProductList.query.order_by(desc(order_name)).offset(page).limit(limit).all()
-            else:
-                # 不知道的类别就用 update_time 排序
-                result_list = DealerProductList.query.order_by(desc('update_time')).offset(page).limit(limit).all()
-
-        elif order_by.startswith('+'):
-            # 升序
-            order_name = order_by.split("+")[-1]
-            if order_name in OrderNameEnum.__members__:
-                result_list = DealerProductList.query.order_by(asc(order_name)).offset(page).limit(limit).all()
-            else:
-                # 不知道的类别就用 update_time 排序
-                result_list = DealerProductList.query.order_by(asc('update_time')).offset(page).limit(limit).all()
-
-        else:
-            # 不知道用的什么
-            result_list = DealerProductList.query.order_by(desc('update_time')).offset(page).limit(limit).all()
-
-    # 给定了经销商的名字
-    else:
-        if order_by.startswith('-'):
-            # 降序
-            order_name = order_by.split("-")[-1]
-            if order_name in OrderNameEnum.__members__:
-                result_list = DealerProductList.query.filter_by(
-                    belong_to=dealer_name).order_by(desc(order_name)).offset(page).limit(limit).all()
-            else:
-                # 不知道的类别就用 update_time 排序
-                result_list = DealerProductList.query.filter_by(belong_to=dealer_name).order_by(
-                    desc('update_time')).offset(page).limit(limit).all()
-
-        elif order_by.startswith('+'):
-            # 升序
-            order_name = order_by.split("+")[-1]
-            if order_name in OrderNameEnum.__members__:
-                result_list = DealerProductList.query.filter_by(belong_to=dealer_name).order_by(
-                    asc(order_name)).offset(page).limit(limit).all()
-            else:
-                # 不知道的类别就用 update_time 排序
-                result_list = DealerProductList.query.filter_by(belong_to=dealer_name).order_by(
-                    asc('update_time')).offset(page).limit(limit).all()
-
-        else:
-            # 不知道用的什么
-            result_list = DealerProductList.query.filter_by(belong_to=dealer_name).order_by(
-                desc('update_time')).offset(page).limit(limit).all()
-
-    return {"data": result_list, "count": DealerProductList.query.count()}
-
-
 def get_all_dealer_product(product_name, dealer_name, order_by='-update_time'):
     """
     获取所有的产品列表-用于下载excel
@@ -149,37 +90,37 @@ def get_all_dealer_product(product_name, dealer_name, order_by='-update_time'):
                 # 降序
                 order_name = order_by.split("-")[-1]
                 if order_name in OrderNameEnum.__members__:
-                    result_list = DealerProductList.query.filter_by(belong_to=dealer_name).filter(
-                        DealerProductList.product_name.like('%{}%'.format(product_name))).order_by(
+                    result_tuple = db.session.query(A, B).join(B, A.product_id == B.business_id).filter(
+                        A.belong_to == dealer_name).filter(B.product_name.like('%{}%'.format(product_name))).order_by(
                         desc(order_name)).all()
                 else:
                     # 不在enum里面的就用 update_time 降序
-                    result_list = DealerProductList.query.filter_by(belong_to=dealer_name).filter(
-                        DealerProductList.product_name.like('%{}%'.format(product_name))).order_by(
-                        desc('update_time')).all()
+                    result_tuple = db.session.query(A, B).join(B, A.product_id == B.business_id).filter(
+                        A.belong_to == dealer_name).filter(B.product_name.like('%{}%'.format(product_name))).order_by(
+                        desc(A.update_time)).all()
 
             elif order_by.startswith('+'):
                 # 升序
                 order_name = order_by.split("+")[-1]
                 if order_name in OrderNameEnum.__members__:
-                    result_list = DealerProductList.query.filter_by(belong_to=dealer_name).filter(
-                        DealerProductList.product_name.like('%{}%'.format(product_name))).order_by(
+                    result_tuple = db.session.query(A, B).join(B, A.product_id == B.business_id).filter(
+                        A.belong_to == dealer_name).filter(B.product_name.like('%{}%'.format(product_name))).order_by(
                         asc(order_name)).all()
                 else:
                     # 不在enum里面的就用 update_time 降序
-                    result_list = DealerProductList.query.filter_by(belong_to=dealer_name).filter(
-                        DealerProductList.product_name.like('%{}%'.format(product_name))).order_by(
-                        asc('update_time')).all()
+                    result_tuple = db.session.query(A, B).join(B, A.product_id == B.business_id).filter(
+                        A.belong_to == dealer_name).filter(B.product_name.like('%{}%'.format(product_name))).order_by(
+                        asc(A.update_time)).all()
 
             else:
-                result_list = DealerProductList.query.filter_by(belong_to=dealer_name).filter(
-                    DealerProductList.product_name.like('%{}%'.format(product_name))).order_by(
-                    desc('update_time')).all()
+                result_tuple = db.session.query(A, B).join(B, A.product_id == B.business_id).filter(
+                    A.belong_to == dealer_name).filter(B.product_name.like('%{}%'.format(product_name))).order_by(
+                    desc(A.update_time)).all()
 
             return {
-                "data": result_list,
-                "count": DealerProductList.query.filter_by(belong_to=dealer_name).filter(
-                    DealerProductList.product_name.like('%{}%'.format(product_name))).count()
+                "data": result_tuple,
+                "count": db.session.query(A, B).join(B, A.product_id == B.business_id).filter(
+                    A.belong_to == dealer_name).filter(B.product_name.like('%{}%'.format(product_name))).count()
             }
 
         else:
@@ -187,32 +128,34 @@ def get_all_dealer_product(product_name, dealer_name, order_by='-update_time'):
                 # 降序
                 order_name = order_by.split("-")[-1]
                 if order_name in OrderNameEnum.__members__:
-                    result_list = DealerProductList.query.filter(DealerProductList.product_name.like(
-                        '%{}%'.format(product_name))).order_by(desc(order_name)).all()
+                    result_tuple = db.session.query(A, B).join(B, A.product_id == B.business_id).filter(
+                        B.product_name.like('%{}%'.format(product_name))).order_by(desc(order_name)).all()
+                    # result_list = DealerProductList.query.filter(DealerProductList.product_name.like(
+                    #     '%{}%'.format(product_name))).order_by(desc(order_name)).all()
                 else:
                     # 不在enum里面的就用 update_time 降序
-                    result_list = DealerProductList.query.filter(DealerProductList.product_name.like(
-                        '%{}%'.format(product_name))).order_by(desc('update_time')).all()
+                    result_tuple = db.session.query(A, B).join(B, A.product_id == B.business_id).filter(
+                        B.product_name.like('%{}%'.format(product_name))).order_by(desc(A.update)).all()
 
             elif order_by.startswith('+'):
                 # 降序
                 order_name = order_by.split("+")[-1]
                 if order_name in OrderNameEnum.__members__:
-                    result_list = DealerProductList.query.filter(DealerProductList.product_name.like(
-                        '%{}%'.format(product_name))).order_by(asc(order_name)).all()
+                    result_tuple = db.session.query(A, B).join(B, A.product_id == B.business_id).filter(
+                        B.product_name.like('%{}%'.format(product_name))).order_by(asc(order_name)).all()
                 else:
                     # 不在enum里面的就用 update_time 降序
-                    result_list = DealerProductList.query.filter(DealerProductList.product_name.like(
-                        '%{}%'.format(product_name))).order_by(asc('update_time')).all()
+                    result_tuple = db.session.query(A, B).join(B, A.product_id == B.business_id).filter(
+                        B.product_name.like('%{}%'.format(product_name))).order_by(asc(A.update_time)).all()
 
             else:
-                result_list = DealerProductList.query.filter(DealerProductList.product_name.like(
-                    '%{}%'.format(product_name))).order_by(desc('update_time')).all()
+                result_tuple = db.session.query(A, B).join(B, A.product_id == B.business_id).filter(
+                    B.product_name.like('%{}%'.format(product_name))).order_by(desc(A.update_time)).all()
 
             return {
-                "data": result_list,
-                "count": DealerProductList.query.filter(DealerProductList.product_name.like(
-                    '%{}%'.format(product_name))).count()
+                "data": result_tuple,
+                "count": db.session.query(A, B).join(B, A.product_id == B.business_id).filter(
+                    B.product_name.like('%{}%'.format(product_name))).count()
             }
 
     else:
@@ -221,26 +164,26 @@ def get_all_dealer_product(product_name, dealer_name, order_by='-update_time'):
                 # 降序
                 order_name = order_by.split("-")[-1]
                 if order_name in OrderNameEnum.__members__:
-                    result_list = DealerProductList.query.filter_by(belong_to=dealer_name).order_by(
-                        desc(order_name)).all()
+                    result_tuple = db.session.query(A, B).join(B, A.product_id == B.business_id).filter(
+                        A.belong_to == dealer_name).order_by(desc(order_name)).all()
                 else:
-                    result_list = DealerProductList.query.filter_by(belong_to=dealer_name).order_by(
-                        desc('update_time')).all()
+                    result_tuple = db.session.query(A, B).join(B, A.product_id == B.business_id).filter(
+                        A.belong_to == dealer_name).order_by(desc(A.update_time)).all()
             elif order_by.startswith('+'):
                 # 降序
                 order_name = order_by.split("+")[-1]
                 if order_name in OrderNameEnum.__members__:
-                    result_list = DealerProductList.query.filter_by(belong_to=dealer_name).order_by(
-                        asc(order_name)).all()
+                    result_tuple = db.session.query(A, B).join(B, A.product_id == B.business_id).filter(
+                        A.belong_to == dealer_name).order_by(asc(order_name)).all()
                 else:
-                    result_list = DealerProductList.query.filter_by(belong_to=dealer_name).order_by(
-                        asc('update_time')).all()
+                    result_tuple = db.session.query(A, B).join(B, A.product_id == B.business_id).filter(
+                        A.belong_to == dealer_name).order_by(asc(A.update_time)).all()
             else:
-                result_list = DealerProductList.query.filter_by(belong_to=dealer_name).order_by(
-                    desc('update_time')).all()
+                result_tuple = db.session.query(A, B).join(B, A.product_id == B.business_id).filter(
+                    A.belong_to == dealer_name).order_by(desc(A.update_time)).all()
 
             return {
-                "data": result_list,
+                "data": result_tuple,
                 "count": DealerProductList.query.filter_by(belong_to=dealer_name).count()
             }
 
@@ -249,21 +192,26 @@ def get_all_dealer_product(product_name, dealer_name, order_by='-update_time'):
                 # 降序
                 order_name = order_by.split("-")[-1]
                 if order_name in OrderNameEnum.__members__:
-                    result_list = DealerProductList.query.order_by(desc(order_name)).all()
+                    result_tuple = db.session.query(A, B).join(B, A.product_id == B.business_id).order_by(
+                        desc(order_name)).all()
                 else:
-                    result_list = DealerProductList.query.order_by(desc('update_time')).all()
+                    result_tuple = db.session.query(A, B).join(B, A.product_id == B.business_id).order_by(
+                        desc(A.update_time)).all()
             elif order_by.startswith('+'):
                 # 升序
                 order_name = order_by.split("+")[-1]
                 if order_name in OrderNameEnum.__members__:
-                    result_list = DealerProductList.query.order_by(asc(order_name)).all()
+                    result_tuple = db.session.query(A, B).join(B, A.product_id == B.business_id).order_by(
+                        asc(order_name)).all()
                 else:
-                    result_list = DealerProductList.query.order_by(asc('update_time')).all()
+                    result_tuple = db.session.query(A, B).join(B, A.product_id == B.business_id).order_by(
+                        asc(A.update_time)).all()
             else:
-                result_list = DealerProductList.query.order_by(desc('update_time')).all()
+                result_tuple = db.session.query(A, B).join(B, A.product_id == B.business_id).order_by(
+                    desc(A.update_time)).all()
 
             return {
-                "data": result_list,
+                "data": result_tuple,
                 "count": DealerProductList.query.count()
             }
 
@@ -332,7 +280,7 @@ def search_product(product_name: str, page: int = 0, limit: int = 100, order_by=
 
             return {
                 "data": result_list,
-                "count": ProductList.query.all()
+                "count": ProductList.query.count()
             }
 
     elif order_by.startswith('+'):
@@ -384,69 +332,6 @@ def search_product(product_name: str, page: int = 0, limit: int = 100, order_by=
             return {"data": result_list, "count": ProductList.query.count()}
 
 
-def search_all_product(product_name: str, order_by="-update_time"):
-    """
-    搜索获取所有的产品
-    :param product_name: 产品名称
-    :param order_by: 排序，例如："+product_name"
-    :return:
-    """
-    if order_by.startswith('-'):
-        # 降序
-        order_name = order_by.split("-")[-1]
-
-        if product_name:
-            if order_name in OrderNameEnum.__members__:
-                result_list = ProductList.query.filter(ProductList.product_name.like('%{}%'.format(
-                    product_name))).order_by(desc(order_name)).all()
-            else:
-                # 不知道的类别就用 update_time 排序
-                result_list = ProductList.query.filter(ProductList.product_name.like('%{}%'.format(
-                    product_name))).order_by(desc('update_time')).all()
-
-        else:
-            # 搜索的时候没有给出 product_name，给出所有的数据
-            if order_name in OrderNameEnum.__members__:
-                result_list = ProductList.query.order_by(desc(order_name)).all()
-            else:
-                result_list = ProductList.query.order_by(desc('update_time')).all()
-
-    elif order_by.startswith('+'):
-        # 升序
-        order_name = order_by.split("+")[-1]
-
-        if product_name:
-            # 如果给出了 product_name 关键词
-            if order_name in OrderNameEnum.__members__:
-                result_list = ProductList.query.filter(ProductList.product_name.like('%{}%'.format(
-                    product_name))).order_by(asc(order_name)).all()
-            else:
-                # 不知道的类别就用 update_time 排序
-                result_list = ProductList.query.filter(ProductList.product_name.like('%{}%'.format(
-                    product_name))).order_by(asc('update_time')).all()
-
-        else:
-            # 搜索的时候没有给出 product_name，给出所有的数据
-            if order_name in OrderNameEnum.__members__:
-                result_list = ProductList.query.order_by(asc(order_name)).all()
-            else:
-                # 不知道的类别就用 update_time 排序
-                result_list = ProductList.query.order_by(asc('update_time')).all()
-
-    else:
-        # 不知道是什么，直接用 -update_time 进行排序
-        if product_name:
-            # 不知道的类别就用 update_time 排序
-            result_list = ProductList.query.filter(
-                ProductList.product_name.like('%{}%'.format(product_name))
-            ).order_by(desc('update_time')).all()
-
-        else:
-            result_list = ProductList.query.order_by(desc('update_time')).all()
-
-    return {"data": result_list, "count": len(result_list)}
-
-
 def search_dealer_product(title: str, dealer_name: str, page: int = 0, limit: int = 100, order_by='-update_time'):
     """
     搜索经销商产品
@@ -457,9 +342,6 @@ def search_dealer_product(title: str, dealer_name: str, page: int = 0, limit: in
     :param order_by: 排序，例如："+product_name"
     :return:
     """
-    # 别名
-    A = aliased(DealerProductList)
-    B = aliased(ProductList)
     if title:
         if dealer_name:
             if order_by and order_by.startswith('-'):

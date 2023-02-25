@@ -12,9 +12,6 @@ def check_user(username, password):
     :return:
     """
     user = AuthUser.query.filter_by(username=username).first()
-    # print(get_password_hash(password))
-    # print(user.password)
-    # print(password, get_password_hash(password), user.password)
     if not user:
         return False
     if not verify_password(password, user.password):

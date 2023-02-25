@@ -248,8 +248,11 @@ def get_outbound_bar_statistic():
         product_list = OutboundOrderList.query.filter_by(outbound_order_id=outbound_id).all()
         for product_obj in product_list:
             dealer_product_id = product_obj.dealer_product_id
-            product = DealerProductList.query.filter_by(business_id=dealer_product_id).first()
-            _dict = product.as_dict()
+            dealer_product = DealerProductList.query.filter_by(business_id=dealer_product_id).first()
+            product = ProductList.query.filter_by(business_id=dealer_product.product_id).first()
+            _dict = dealer_product.as_dict()
+            _dict['product_name'] = product.product_name
+            _dict['specifications'] = product.specifications
             _dict['quantity'] = product_obj.quantity
             data_list.append(_dict)
 
@@ -461,16 +464,11 @@ def get_products_by_outbound_order_id(data_id):
     :param data_id: 出库单id
     :return:
     """
-    # result_list = OutboundOrderList.query.filter_by(outbound_order_id=data_id).all()
     A = aliased(OutboundOrderList)
     B = aliased(DealerProductList)
     C = aliased(ProductList)
-    result_tuple_list = db.session.query(A, C).join(B, A.dealer_product_id == B.business_id).join(C, B.product_id == C.business_id).filter(
-        A.outbound_order_id == data_id).all()
-
-    # results = db.session.query(A, C).outerjoin((C, C.product_id == ProductList.business_id)).all()
-
-    # result_tuple_list
+    result_tuple_list = db.session.query(A, C).join(B, A.dealer_product_id == B.business_id).join(
+        C, B.product_id == C.business_id).filter(A.outbound_order_id == data_id).all()
     result_list = format_outbound_product(data_list=result_tuple_list)
 
     return {"data": result_list, "count": OutboundOrderList.query.filter_by(outbound_order_id=data_id).count()}
