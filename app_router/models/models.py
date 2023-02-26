@@ -93,8 +93,13 @@ class AuthGroup(db.Model):
 
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()), unique=True,
                    nullable=False, comment="哈希自动生成id")
-    group_name = db.Column(db.Integer, nullable=False, default=0, unique=True, index=True,
-                           comment="组名，普通用户组（默认）：0；用户管理组：1；数据管理组：2；超级管理员组：99")
+    # group_name = db.Column(db.Integer, nullable=False, default=0, unique=True, index=True,
+    #                        comment="组名，普通用户组（默认）：0；用户管理组：1；数据管理组：2；超级管理员组：99")
+    group_name = db.Column(db.String(150), comment="用户名key，例如editor", nullable=False)
+    group_label = db.Column(
+        db.String(150), nullable=False, comment="组名，普通用户组（默认）；用户管理组；数据管理组；超级管理员组"
+    )
+    description = db.Column(db.Text, comment="描述信息")
 
     # 公共字段
     is_delete = db.Column(db.Integer, default=0, nullable=False,
@@ -136,23 +141,24 @@ class AuthApi(db.Model):
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()), unique=True,
                    nullable=False, comment="哈希自动生成id")
     api_parent_id = db.Column(db.String(36), comment="菜单的父级-树形结构")
-    title = db.Column(db.String(150), comment="api的title名字，例如：货单表格", nullable=False)
+    vue_name = db.Column(db.String(150), comment="Vue中展示的名字")
+    title = db.Column(db.String(150), comment="api的title名字，例如：货单表格")
     description = db.Column(db.Text, comment="api的描述信息")
     icon = db.Column(db.String(50), comment="api的icon字段，例如：table")
     menu_type = db.Column(db.Integer, comment="菜单的等级，一级菜单为0，二级菜单为1，后面的类推", nullable=False)
-    hidden = db.Column(db.Integer, comment="是否隐藏，0为不隐藏，1为隐藏", default=0, nullable=False)
+    hidden = db.Column(db.Integer, comment="是否隐藏，0为不隐藏，1为隐藏", default=0)
     permission = db.Column(
         db.String(50), comment="此api的权限，用:隔开，例如：99:0 就是只允许admin和editor的权限",
         default="0", nullable=False
     )
+    redirect = db.Column(db.String(150), comment="一级目录的中定向到的页面")
 
     # api_name = db.Column(
     #     db.String(150), unique=True, index=True, comment="api的字段名，例如：/user/get_group_data", nullable=False
     # )
 
     router_path = db.Column(
-        db.String(150), comment="路由路径，例如：/user/get_group_data，子路由就与父路由的路径进行拼接",
-        unique=True, index=True, nullable=False
+        db.String(150), comment="路由路径，例如：/user/get_group_data，子路由就与父路由的路径进行拼接", nullable=False
     )
     component_path = db.Column(db.String(150), comment="组件路径，例如：views/product/myself-price-list", nullable=False)
 

@@ -1,9 +1,9 @@
-from sqlalchemy import desc
+from sqlalchemy import desc, asc
 from sqlalchemy.orm import aliased
 
 from app_router.models.database import db
 from app_router.models.models import AuthUser, AuthGroup, AuthApi
-from enums.enums import UserGroupEnum, MenuEnum, MenuHiddenEnum
+from enums.enums import MenuEnum, MenuHiddenEnum
 
 
 def get_user_by_name(username):
@@ -42,7 +42,7 @@ def add_user(data):
         raise Exception
 
 
-def get_group_name_by_user_id(user_id):
+def get_group_obj_by_user_id(user_id):
     """
     通过用户id获取对应的组名，例如99管理员组
     :param user_id: 用户id
@@ -52,7 +52,7 @@ def get_group_name_by_user_id(user_id):
     B = aliased(AuthGroup)
     result_tuple_list = db.session.query(A, B).join(B, A.group_id == B.business_id).filter(
         A.business_id == user_id).first()
-    return result_tuple_list[-1].group_name
+    return result_tuple_list[-1]
 
 
 def get_group_by_name(group_name):
@@ -77,6 +77,90 @@ def add_group(data):
         db.session.commit()
         db.session.flush()
         return group_obj.business_id
+    except:
+        db.session.rollback()
+        # TODO 添加自定义错误
+        raise Exception
+
+
+def delete_role_and_route(role_id, group_name):
+    """
+    根据 business_id 删除角色
+    :param role_id: 角色id
+    :param group_name: 角色名，例如：editor
+    :return:
+    """
+    try:
+        AuthGroup.query.filter_by(business_id=role_id).delete()
+        db.session.commit()
+        db.session.flush()
+
+        # 删除所有的AuthApi中包含这个角色的权限
+        auth_obj_list = AuthApi.query.all()
+        for auth_obj in auth_obj_list:
+            permission = auth_obj.permission
+            permissions = permission.split(':')
+            if group_name in permissions:
+                permissions.remove(group_name)
+                new_permission = ":".join(permissions)
+                auth_obj.update({'permission': new_permission})
+                db.session.flush()
+    except:
+        db.session.rollback()
+        raise Exception
+
+
+def add_role_and_route(group_dict, routes):
+    """
+    新增角色和所属路由权限
+    :param group_dict:
+    :param routes: 路由dict
+    :return:
+    """
+    try:
+        # 先增加 AuthGroup 数据
+        group_obj = AuthGroup(**group_dict)
+        # group_obj.fill(data)
+        db.session.add(group_obj)
+        db.session.commit()
+        db.session.flush()
+
+        # 增加上一条新增的 role 到这些路由中去
+        for route_obj in routes:
+            # 先玩父级的
+            if route_obj.get('name') and route_obj.get('path'):
+                # 先查询这条 AuthApi 数据
+                auth_obj = AuthApi.query.filter_by(router_path=route_obj['path'], vue_name=route_obj['name']).first()
+                old_permission = auth_obj.permission
+                old_permissions = old_permission.split(':')
+                # 如果老的权限里面没有，就进行追加
+                if group_dict.get('group_name') not in old_permissions:
+                    new_permission = "{}:{}".format(old_permission, group_dict.get('group_name'))
+                    # 更新 permission
+                    auth_obj.query.filter_by(router_path=route_obj['path'], vue_name=route_obj['name']).update(
+                        {'permission': new_permission})
+                    db.session.commit()
+                    db.session.flush()
+
+            if route_obj.get('children'):
+                for children_route_obj in route_obj.get('children'):
+                    if children_route_obj.get('name') and children_route_obj.get('path'):
+                        # 先查询这条 AuthApi 数据
+                        child_auth_obj = AuthApi.query.filter_by(
+                            router_path=children_route_obj['path'], vue_name=children_route_obj['name']).first()
+                        old_children_permission = child_auth_obj.permission
+                        old_children_permissions = old_children_permission.split(':')
+                        # 如果老的权限里面没有，就进行追加
+                        if group_dict.get('group_name') not in old_children_permissions:
+                            new_children_permission = "{}:{}".format(
+                                old_children_permission, group_dict.get('group_name')
+                            )
+                            # 更新 permission
+                            child_auth_obj.query.filter_by(
+                                router_path=children_route_obj['path'], vue_name=children_route_obj['name']).update(
+                                {'permission': new_children_permission})
+                            db.session.commit()
+                            db.session.flush()
     except:
         db.session.rollback()
         # TODO 添加自定义错误
@@ -128,15 +212,7 @@ def get_all_permission():
     :return:
     """
     all_group_list = AuthGroup.query.all()
-    group_names = []
-    for group_obj in all_group_list:
-        group_name = group_obj.group_name
-        group_dict = group_obj.as_dict()
-        # group_dict['label'] 用作前端显示的
-        group_dict['label'] = UserGroupEnum(group_name).name
-        group_names.append(group_dict)
-
-    return group_names
+    return [_.as_dict() for _ in all_group_list]
 
 
 def get_parent_menu():
@@ -184,12 +260,9 @@ def get_menu(page, limit):
         # 展示菜单的权限
         if ":" in permission:
             permissions = permission.split(":")
-            auth_api_dict['permission'] = [int(x) for x in permissions]
-            permissions_label = [UserGroupEnum(int(x)).name for x in permissions]
+            auth_api_dict['permission'] = permissions
         else:
-            auth_api_dict['permission'] = [int(permission)]
-            permissions_label = [UserGroupEnum(int(permission)).name]
-        auth_api_dict['permission_label'] = permissions_label
+            auth_api_dict['permission'] = [permission]
 
         auth_api_list.append(auth_api_dict)
 
@@ -197,6 +270,22 @@ def get_menu(page, limit):
         "data": auth_api_list,
         "count": AuthApi.query.count()
     }
+
+
+def get_all_role():
+    """
+    获取所有的角色
+    :return:
+    """
+    return AuthGroup.query.order_by(asc('create_time')).all()
+
+
+def get_all_menu():
+    """
+    获取所有的菜单列表
+    :return: 所有的 api 路由列表
+    """
+    return AuthApi.query.order_by(asc('create_time')).all()
 
 
 def delete_menu_by_id(business_id):

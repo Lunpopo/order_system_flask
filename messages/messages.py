@@ -10,6 +10,7 @@ delete_product_failed = "产品删除失败！"
 get_scent_type_success = "查询香型列表成功！"
 get_scent_type_failed = "查询香型列表失败！"
 
+
 # [order]
 add_purchase_order_success = "新增入库单成功！"
 add_purchase_order_failed = "新增入库单失败！"
@@ -43,3 +44,8 @@ update_menu_success = "更新菜单成功！"
 update_menu_failed = "更新菜单失败！"
 delete_menu_success = "删除菜单成功！"
 delete_menu_failed = "删除菜单失败！"
+
+add_role_success = "新增角色权限成功！"
+add_role_failed = "新增角色权限失败！"
+delete_role_success = "删除角色权限成功！"
+delete_role_failed = "删除角色权限失败！"

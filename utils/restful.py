@@ -14,6 +14,7 @@ class HttpCode(object):
     unauth = 401
     methoderror = 405
     servererror = 500
+    token_expired = 50014
 
 
 def result(status=HttpCode.ok, code=20000, message="", data=None, succ=True, kwargs=None):
@@ -49,3 +50,8 @@ def method_error(message="", data=None):
 # 服务器错误
 def server_error(message="", data=None):
     return result(code=HttpCode.servererror, message=message, data=data, succ=False)
+
+
+# token过期
+def token_expired(message="", data=None):
+    return result(code=HttpCode.token_expired, message=message, data=data, succ=False)

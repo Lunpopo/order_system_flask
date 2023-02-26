@@ -25,18 +25,18 @@ class OrderNameEnum(Enum):
     create_time = "create_time"
 
 
-class UserGroupEnum(Enum):
-    """
-    用户和用户组枚举，数字对应的角色名：
-    普通用户组：0
-    用户管理组：1
-    数据管理组：2
-    管理员：99
-    """
-    editor = 0
-    user = 1
-    data = 2
-    admin = 99
+# class UserGroupEnum(Enum):
+#     """
+#     用户和用户组枚举，数字对应的角色名：
+#     普通用户组：0
+#     用户管理组：1
+#     数据管理组：2
+#     管理员：99
+#     """
+#     editor = 0
+#     user = 1
+#     data = 2
+#     admin = 99
 
 
 class MenuEnum(Enum):
@@ -55,39 +55,39 @@ class MenuHiddenEnum(Enum):
     否 = False
 
 
-class UserRoleEnum(Enum):
-    """
-    用户角色枚举
-    普通用户组：0
-    用户管理组：1
-    数据管理组：2
-    管理员：99
-    """
-    # editor = 0
-    # user = 1
-    # data = 2
-    # admin = 99
-    admin = {
-        'roles': ['admin'],
-        'introduction': 'I am a super administrator',
-        'avatar': 'https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif',
-        'name': 'Super Admin'
-    }
-    editor = {
-        'roles': ['editor'],
-        'introduction': 'I am an editor',
-        'avatar': 'https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif',
-        'name': 'Normal Editor'
-    }
-    user = {
-        'roles': ['user'],
-        'introduction': 'I am an user manager',
-        'avatar': 'https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif',
-        'name': '用户管理组'
-    }
-    data = {
-        'roles': ['data'],
-        'introduction': 'I am an data manager',
-        'avatar': 'https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif',
-        'name': '数据管理组'
-    }
+# class UserRoleEnum(Enum):
+#     """
+#     用户角色枚举
+#     普通用户组：0
+#     用户管理组：1
+#     数据管理组：2
+#     管理员：99
+#     """
+#     # editor = 0
+#     # user = 1
+#     # data = 2
+#     # admin = 99
+#     admin = {
+#         'roles': ['admin'],
+#         'introduction': 'I am a super administrator',
+#         'avatar': 'https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif',
+#         'name': 'Super Admin'
+#     }
+#     editor = {
+#         'roles': ['editor'],
+#         'introduction': 'I am an editor',
+#         'avatar': 'https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif',
+#         'name': 'Normal Editor'
+#     }
+#     user = {
+#         'roles': ['user'],
+#         'introduction': 'I am an user manager',
+#         'avatar': 'https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif',
+#         'name': '用户管理组'
+#     }
+#     data = {
+#         'roles': ['data'],
+#         'introduction': 'I am an data manager',
+#         'avatar': 'https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif',
+#         'name': '数据管理组'
+#     }
