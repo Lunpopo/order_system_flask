@@ -95,7 +95,7 @@ class AuthGroup(db.Model):
                    nullable=False, comment="哈希自动生成id")
     # group_name = db.Column(db.Integer, nullable=False, default=0, unique=True, index=True,
     #                        comment="组名，普通用户组（默认）：0；用户管理组：1；数据管理组：2；超级管理员组：99")
-    group_name = db.Column(db.String(150), comment="用户名key，例如editor", nullable=False)
+    group_name = db.Column(db.String(150), unique=True, comment="用户名key，例如editor", nullable=False)
     group_label = db.Column(
         db.String(150), nullable=False, comment="组名，普通用户组（默认）；用户管理组；数据管理组；超级管理员组"
     )

@@ -83,6 +83,32 @@ def add_group(data):
         raise Exception
 
 
+def delete_route(group_name):
+    """
+    根据 角色名（例如 editor） 删除关于这个角色的所有路由权限
+    :param group_name: 例如：editor
+    :return:
+    """
+    try:
+        if group_name:
+            # 删除所有的AuthApi中包含这个角色的权限
+            auth_obj_list = AuthApi.query.all()
+
+            for auth_obj in auth_obj_list:
+                permission = auth_obj.permission
+                permissions = permission.split(':')
+                if group_name in permissions:
+                    permissions.remove(group_name)
+                    new_permission = ":".join(permissions)
+                    # 更新
+                    auth_obj.permission = new_permission
+                    db.session.commit()
+                    db.session.flush()
+    except:
+        db.session.rollback()
+        raise Exception
+
+
 def delete_role_and_route(role_id, group_name):
     """
     根据 business_id 删除角色
@@ -91,23 +117,92 @@ def delete_role_and_route(role_id, group_name):
     :return:
     """
     try:
-        AuthGroup.query.filter_by(business_id=role_id).delete()
-        db.session.commit()
-        db.session.flush()
+        if role_id and group_name:
+            AuthGroup.query.filter_by(business_id=role_id).delete()
+            db.session.commit()
+            db.session.flush()
 
-        # 删除所有的AuthApi中包含这个角色的权限
-        auth_obj_list = AuthApi.query.all()
-        for auth_obj in auth_obj_list:
-            permission = auth_obj.permission
-            permissions = permission.split(':')
-            if group_name in permissions:
-                permissions.remove(group_name)
-                new_permission = ":".join(permissions)
-                auth_obj.update({'permission': new_permission})
-                db.session.flush()
+            # 删除所有的AuthApi中包含这个角色的权限
+            delete_route(group_name=group_name)
     except:
         db.session.rollback()
         raise Exception
+
+
+def update_role_and_route(group_dict, routes):
+    """
+    更新角色和所属路由权限
+    :param group_dict:
+    :param routes: 路由dict
+    :return:
+    """
+    try:
+        auth_group_obj = AuthGroup.query.filter_by(business_id=group_dict['business_id']).first()
+        if group_dict.get('group_name'):
+            auth_group_obj.group_name = group_dict['group_name']
+        if group_dict.get('group_label'):
+            auth_group_obj.group_label = group_dict['group_label']
+        if group_dict.get('description'):
+            auth_group_obj.description = group_dict['description']
+        db.session.commit()
+        db.session.flush()
+
+        # 先删除所有的有关这个角色的路由权限（后面再追加）
+        delete_route(group_name=group_dict['group_name'])
+        # 更新路由
+        add_routes_role(group_name=group_dict['group_name'], routes=routes)
+
+        return auth_group_obj
+    except:
+        db.session.rollback()
+        # TODO 添加自定义错误
+        raise Exception
+
+
+def add_routes_role(group_name, routes):
+    """
+    添加角色权限到路由中去
+    :param group_name:
+    :param routes:
+    :return:
+    """
+    for route_obj in routes:
+        # 先玩父级的
+        if route_obj.get('name') and route_obj.get('path'):
+            # 先查询这条 AuthApi 数据
+            auth_obj = AuthApi.query.filter_by(router_path=route_obj['path'], vue_name=route_obj['name']).first()
+            old_permission = auth_obj.permission
+            old_permissions = old_permission.split(':')
+            # 如果老的权限里面没有，就进行追加
+            if group_name not in old_permissions:
+                new_permission = "{}:{}".format(old_permission, group_name)
+                # 更新 permission
+                auth_obj.query.filter_by(router_path=route_obj['path'], vue_name=route_obj['name']).update(
+                    {'permission': new_permission})
+                db.session.commit()
+                db.session.flush()
+
+        if route_obj.get('children'):
+            children_routes_list = route_obj.get('children')
+            add_routes_role(group_name, children_routes_list)
+            # for children_route_obj in route_obj.get('children'):
+            #     if children_route_obj.get('name') and children_route_obj.get('path'):
+            #         # 先查询这条 AuthApi 数据
+            #         child_auth_obj = AuthApi.query.filter_by(
+            #             router_path=children_route_obj['path'], vue_name=children_route_obj['name']).first()
+            #         old_children_permission = child_auth_obj.permission
+            #         old_children_permissions = old_children_permission.split(':')
+            #         # 如果老的权限里面没有，就进行追加
+            #         if group_name not in old_children_permissions:
+            #             new_children_permission = "{}:{}".format(
+            #                 old_children_permission, group_name
+            #             )
+            #             # 更新 permission
+            #             child_auth_obj.query.filter_by(
+            #                 router_path=children_route_obj['path'], vue_name=children_route_obj['name']).update(
+            #                 {'permission': new_children_permission})
+            #             db.session.commit()
+            #             db.session.flush()
 
 
 def add_role_and_route(group_dict, routes):
@@ -126,41 +221,8 @@ def add_role_and_route(group_dict, routes):
         db.session.flush()
 
         # 增加上一条新增的 role 到这些路由中去
-        for route_obj in routes:
-            # 先玩父级的
-            if route_obj.get('name') and route_obj.get('path'):
-                # 先查询这条 AuthApi 数据
-                auth_obj = AuthApi.query.filter_by(router_path=route_obj['path'], vue_name=route_obj['name']).first()
-                old_permission = auth_obj.permission
-                old_permissions = old_permission.split(':')
-                # 如果老的权限里面没有，就进行追加
-                if group_dict.get('group_name') not in old_permissions:
-                    new_permission = "{}:{}".format(old_permission, group_dict.get('group_name'))
-                    # 更新 permission
-                    auth_obj.query.filter_by(router_path=route_obj['path'], vue_name=route_obj['name']).update(
-                        {'permission': new_permission})
-                    db.session.commit()
-                    db.session.flush()
-
-            if route_obj.get('children'):
-                for children_route_obj in route_obj.get('children'):
-                    if children_route_obj.get('name') and children_route_obj.get('path'):
-                        # 先查询这条 AuthApi 数据
-                        child_auth_obj = AuthApi.query.filter_by(
-                            router_path=children_route_obj['path'], vue_name=children_route_obj['name']).first()
-                        old_children_permission = child_auth_obj.permission
-                        old_children_permissions = old_children_permission.split(':')
-                        # 如果老的权限里面没有，就进行追加
-                        if group_dict.get('group_name') not in old_children_permissions:
-                            new_children_permission = "{}:{}".format(
-                                old_children_permission, group_dict.get('group_name')
-                            )
-                            # 更新 permission
-                            child_auth_obj.query.filter_by(
-                                router_path=children_route_obj['path'], vue_name=children_route_obj['name']).update(
-                                {'permission': new_children_permission})
-                            db.session.commit()
-                            db.session.flush()
+        add_routes_role(group_dict['group_name'], routes)
+        return group_obj
     except:
         db.session.rollback()
         # TODO 添加自定义错误

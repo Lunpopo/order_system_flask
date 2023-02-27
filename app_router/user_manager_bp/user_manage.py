@@ -1,6 +1,7 @@
 import json
 from datetime import timedelta
 
+import jose
 from flask import Blueprint, request
 from gkestor_common_logger import Logger
 from jose import ExpiredSignatureError
@@ -9,7 +10,8 @@ from app_router.models import user_crud
 from app_router.user_manager_bp.user_lib import check_user, generate_routes, filter_routes_by_role
 from configs.contents import ACCESS_TOKEN_EXPIRE_MINUTES
 from messages.messages import add_menu_success, add_menu_failed, delete_menu_success, delete_menu_failed, \
-    update_menu_success, update_menu_failed, add_role_success, add_role_failed, delete_role_failed, delete_role_success
+    update_menu_success, update_menu_failed, add_role_success, add_role_failed, delete_role_failed, delete_role_success, \
+    update_role_success, update_role_failed
 from utils import restful
 from utils.authentication import create_access_token, decode_token
 from utils.date_utils import time_to_timestamp
@@ -61,7 +63,11 @@ def user_info():
         }
         return restful.ok(message="获取用户信息成功！", data=return_user_obj)
     except ExpiredSignatureError:
-        return restful.token_expired(message="登录过期")
+        return restful.token_expired(message="登录过期！")
+    except jose.exceptions.JWTError:
+        return restful.illegal_token(message="非法登录！")
+    except:
+        return restful.illegal_token(message="非法登录！")
 
 
 @user_bp.route("roles", methods=["GET"])
@@ -71,13 +77,7 @@ def get_roles():
     :return:
     """
     result = user_crud.get_all_role()
-    data_list = []
-    for _ in result:
-        data_dict = _.as_dict()
-        # if data_dict.get('group_name') is not None:
-        #     group_name = UserGroupEnum(data_dict.get('group_name')).name
-        #     data_dict['group_name'] = group_name
-        data_list.append(data_dict)
+    data_list = [_.as_dict() for _ in result]
     # 统一转换成时间戳的形式
     data_list = time_to_timestamp(data_list)
 
@@ -88,6 +88,37 @@ def get_roles():
         "data": data_list
     }
     return restful.ok(message="获取角色权限信息成功！", data=return_data)
+
+
+@user_bp.route("update_role", methods=["POST"])
+def update_role():
+    """
+    更新 角色 和 所对应的路由
+    :return:
+    """
+    data = request.get_data(as_text=True)
+    params_dict = json.loads(data)
+    logger.info(
+        "/user/add_role 前端传入的参数为：\n{}".format(json.dumps(params_dict, indent=4, ensure_ascii=False))
+    )
+    roles_routes = params_dict.get('routes')
+    group_name = params_dict.get('group_name')
+    group_label = params_dict.get('group_label')
+    description = params_dict.get('description')
+    business_id = params_dict.get('business_id')
+
+    update_group_dict = {
+        "group_name": group_name,
+        "group_label": group_label,
+        "description": description,
+        'business_id': business_id
+    }
+    try:
+        group_obj = user_crud.update_role_and_route(update_group_dict, roles_routes)
+        return_data_dict = group_obj.as_dict()
+        return restful.ok(message=update_role_success, data=return_data_dict)
+    except:
+        return restful.server_error(message=update_role_failed, data=update_group_dict)
 
 
 @user_bp.route("add_role", methods=["POST"])
@@ -109,13 +140,14 @@ def add_role():
     add_group_dict = {
         "group_name": group_name,
         "group_label": group_label,
-        "description": description
+        "description": description,
     }
     try:
-        user_crud.add_role_and_route(add_group_dict, roles_routes)
+        group_obj = user_crud.add_role_and_route(add_group_dict, roles_routes)
+        return_data_dict = group_obj.as_dict()
+        return restful.ok(message=add_role_success, data=return_data_dict)
     except:
-        return restful.server_error(message=add_role_failed)
-    return restful.ok(message=add_role_success)
+        return restful.server_error(message=add_role_failed, data=add_group_dict)
 
 
 @user_bp.route("delete_role", methods=["POST"])

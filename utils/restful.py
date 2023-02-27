@@ -14,7 +14,10 @@ class HttpCode(object):
     unauth = 401
     methoderror = 405
     servererror = 500
+    # token过期
     token_expired = 50014
+    # 非法登录
+    illegal_token = 50008
 
 
 def result(status=HttpCode.ok, code=20000, message="", data=None, succ=True, kwargs=None):
@@ -55,3 +58,8 @@ def server_error(message="", data=None):
 # token过期
 def token_expired(message="", data=None):
     return result(code=HttpCode.token_expired, message=message, data=data, succ=False)
+
+
+# 非法token
+def illegal_token(message="", data=None):
+    return result(code=HttpCode.illegal_token, message=message, data=data, succ=False)

@@ -47,5 +47,7 @@ delete_menu_failed = "删除菜单失败！"
 
 add_role_success = "新增角色权限成功！"
 add_role_failed = "新增角色权限失败！"
+update_role_success = "更新角色权限成功！"
+update_role_failed = "更新角色权限失败！"
 delete_role_success = "删除角色权限成功！"
 delete_role_failed = "删除角色权限失败！"
