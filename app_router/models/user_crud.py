@@ -4,6 +4,7 @@ from sqlalchemy.orm import aliased
 from app_router.models.database import db
 from app_router.models.models import AuthUser, AuthGroup, AuthApi
 from enums.enums import MenuEnum, MenuHiddenEnum
+from exceptions.user_exception import *
 
 
 def get_user_by_name(username):
@@ -38,8 +39,7 @@ def add_user(data):
         return user_obj
     except:
         db.session.rollback()
-        # TODO 添加自定义错误
-        raise Exception
+        raise AddUserException
 
 
 def get_group_obj_by_user_id(user_id):
@@ -79,8 +79,7 @@ def add_group(data):
         return group_obj.business_id
     except:
         db.session.rollback()
-        # TODO 添加自定义错误
-        raise Exception
+        raise AddGroupException
 
 
 def delete_route(group_name):
@@ -106,7 +105,7 @@ def delete_route(group_name):
                     db.session.flush()
     except:
         db.session.rollback()
-        raise Exception
+        raise DeleteRoleException
 
 
 def delete_role_and_route(role_id, group_name):
@@ -126,7 +125,7 @@ def delete_role_and_route(role_id, group_name):
             delete_route(group_name=group_name)
     except:
         db.session.rollback()
-        raise Exception
+        raise DeleteRoleAndRouteException
 
 
 def update_role_and_route(group_dict, routes):
@@ -155,8 +154,7 @@ def update_role_and_route(group_dict, routes):
         return auth_group_obj
     except:
         db.session.rollback()
-        # TODO 添加自定义错误
-        raise Exception
+        raise UpdateRoleAndRouteException
 
 
 def add_routes_role(group_name, routes):
@@ -184,30 +182,13 @@ def add_routes_role(group_name, routes):
 
         if route_obj.get('children'):
             children_routes_list = route_obj.get('children')
+            # 递归
             add_routes_role(group_name, children_routes_list)
-            # for children_route_obj in route_obj.get('children'):
-            #     if children_route_obj.get('name') and children_route_obj.get('path'):
-            #         # 先查询这条 AuthApi 数据
-            #         child_auth_obj = AuthApi.query.filter_by(
-            #             router_path=children_route_obj['path'], vue_name=children_route_obj['name']).first()
-            #         old_children_permission = child_auth_obj.permission
-            #         old_children_permissions = old_children_permission.split(':')
-            #         # 如果老的权限里面没有，就进行追加
-            #         if group_name not in old_children_permissions:
-            #             new_children_permission = "{}:{}".format(
-            #                 old_children_permission, group_name
-            #             )
-            #             # 更新 permission
-            #             child_auth_obj.query.filter_by(
-            #                 router_path=children_route_obj['path'], vue_name=children_route_obj['name']).update(
-            #                 {'permission': new_children_permission})
-            #             db.session.commit()
-            #             db.session.flush()
 
 
 def add_role_and_route(group_dict, routes):
     """
-    新增角色和所属路由权限
+    新增角色和新增关于这个角色的所有路由权限
     :param group_dict:
     :param routes: 路由dict
     :return:
@@ -225,8 +206,7 @@ def add_role_and_route(group_dict, routes):
         return group_obj
     except:
         db.session.rollback()
-        # TODO 添加自定义错误
-        raise Exception
+        raise AddRoleAndRouteException
 
 
 def add_menu(data):
@@ -244,8 +224,7 @@ def add_menu(data):
         return menu_obj.title
     except:
         db.session.rollback()
-        # TODO 添加自定义错误
-        raise Exception
+        raise AddMenuException
 
 
 def update_menu(data):
@@ -264,8 +243,7 @@ def update_menu(data):
             db.session.commit()
     except:
         db.session.rollback()
-        # TODO 添加自定义错误
-        raise Exception
+        raise UpdateMenuException
 
 
 def get_all_permission():
@@ -361,4 +339,4 @@ def delete_menu_by_id(business_id):
         db.session.commit()
     except:
         db.session.rollback()
-        raise Exception
+        raise DeleteMenuException

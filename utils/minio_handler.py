@@ -52,6 +52,10 @@ class MinioHandler:
         self.minio_client = None
 
     def test_connection(self):
+        """
+        测试连接
+        :return:
+        """
         if not self.minio_client:
             self.minio_client = minio.Minio(self.host, access_key=self.access_key, secret_key=self.secret_key,
                                             secure=self.secure)
@@ -63,6 +67,10 @@ class MinioHandler:
             return False
 
     def get_connection(self):
+        """
+        获取 minio 实例对象
+        :return:
+        """
         if not self.minio_client:
             self.minio_client = minio.Minio(self.host, access_key=self.access_key, secret_key=self.secret_key,
                                             secure=self.secure)
@@ -70,6 +78,13 @@ class MinioHandler:
         return self.minio_client
 
     def fget(self, bucket_name, object_name, file_path="./img.tif"):
+        """
+        下载文件
+        :param bucket_name:
+        :param object_name:
+        :param file_path:
+        :return:
+        """
         self.minio_client.fget_object(
             bucket_name=bucket_name,
             object_name=object_name,
@@ -77,15 +92,13 @@ class MinioHandler:
         )
         return file_path
 
-    def fput_object(self, minio_object_filepath, local_file, bucket_name='',
-                    is_storage=True):
+    def fput_object(self, minio_object_filepath, local_file, bucket_name=''):
         """
         文件上传到对象中，例如：simple-etl-python, leading-data/1.txt, 1.txt
 
         :param minio_object_filepath: structured-data/waijun-system/wjsj.zip
         :param local_file: wjsj.zip
         :param bucket_name: simple-etl-python-test
-        :param is_storage: 是否将引接的文件保存到 rs_cache 缓存数据库
         :return: file_info_dict
         """
         if not self.minio_client:
@@ -116,8 +129,6 @@ class MinioHandler:
             file_info_dict["upload_location"] = upload_location
             file_info_dict['bucket_name'] = bucket_name
             file_info_dict['object_name'] = minio_file_object.object_name
-
-            # 根据download_link file_name object_name 来查数据是否已经录入过
         except:
             logger.error("上传到minio的过程中出错了，详细的信息如下：")
             logger.error(traceback.format_exc())
@@ -126,6 +137,12 @@ class MinioHandler:
         return file_info_dict
 
     def remove_object(self, bucket_name, object_name):
+        """
+        删除 minio 文件
+        :param bucket_name:
+        :param object_name:
+        :return:
+        """
         if not self.minio_client:
             self.minio_client = self.get_connection()
         try:

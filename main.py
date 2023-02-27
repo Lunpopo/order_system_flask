@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from flask import Flask
 from flask_cors import CORS
 from flask_migrate import MigrateCommand
@@ -11,7 +10,7 @@ from app_router.models.models import DealerList
 from app_router.order_display_bp.order import order_bp
 from app_router.user_manager_bp.user_lib import get_current_ip
 from app_router.user_manager_bp.user_manage import user_bp
-from configs import config
+from configs import flask_config
 from utils.authentication import pwd_context
 
 app = Flask(__name__, static_url_path='/static', template_folder='templates/order_system')
@@ -49,13 +48,13 @@ def init_db_data():
     # 添加管理员用户组
     group_name_list = [
         # 普通用户组
-        0,
+        'editor',
         # 用户管理组
-        1,
+        'user',
         # 数据管理组
-        2,
+        'data',
         # 管理员
-        99
+        'admin'
     ]
     for group_name in group_name_list:
         group_data = {
@@ -68,7 +67,7 @@ def init_db_data():
     user_data = {
         "username": "admin",
         "password": pwd_context.hash("111111"),
-        "group_id": user_crud.get_group_by_name(group_name=99).business_id,
+        "group_id": user_crud.get_group_by_name(group_name='admin').business_id,
         "register_ip": get_current_ip(),
         "status": 0
     }
@@ -79,7 +78,7 @@ def init_db_data():
     user_data = {
         "username": "editor",
         "password": pwd_context.hash("111111"),
-        "group_id": user_crud.get_group_by_name(group_name=0).business_id,
+        "group_id": user_crud.get_group_by_name(group_name='editor').business_id,
         "register_ip": get_current_ip(),
         "status": 0
     }
@@ -88,7 +87,7 @@ def init_db_data():
 
 
 if __name__ == '__main__':
-    app.config.from_object(config)
+    app.config.from_object(flask_config)
     # 注册蓝图
     app.register_blueprint(data_bp)
     app.register_blueprint(user_bp)

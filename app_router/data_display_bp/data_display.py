@@ -7,8 +7,8 @@ from gkestor_common_logger import Logger
 
 from app_router.data_display_bp.data_display_lib import upload_image_thumb, format_dealer_product
 from app_router.models import crud
-from messages.messages import add_product_success, add_product_failed, delete_product_failed, delete_product_success, \
-    multiply_delete_product_success, multiply_delete_product_failed
+from app_router.models.crud import delete_multi_product_by_ids, delete_multi_dealer_product_by_ids
+from messages.messages import *
 from utils import restful
 from utils.date_utils import time_to_timestamp
 
@@ -298,22 +298,22 @@ def product_multi_delete():
             "/product_multi_delete 前端传入的参数为：\n{}".format(json.dumps(business_ids, indent=4, ensure_ascii=False)))
 
         if business_ids:
-            # TODO 这个批量删除可以优化
-            for product_business_id in business_ids:
-
-                # 先查一下数据库看有没有这个数据
-                product_data = crud.get_product_by_business_id(business_id=product_business_id)
-                if product_data:  # 如果有这条数据
-                    # 执行删除
-                    try:
-                        crud.delete_product_by_business_id(data_id=product_business_id)
-                    except:
-                        logger.error(
-                            "删除 产品{} 出错，详细的出错信息为：{}".format(product_business_id, traceback.format_exc())
-                        )
-                        return restful.server_error(
-                            message=multiply_delete_product_failed, data={"traceback": traceback.format_exc()}
-                        )
+            # 这个批量删除可以优化
+            # for product_business_id in business_ids:
+            #     # 先查一下数据库看有没有这个数据
+            #     product_data = crud.get_product_by_business_id(business_id=product_business_id)
+            #     if product_data:  # 如果有这条数据
+            #         # 执行删除
+            #         try:
+            #             crud.delete_product_by_business_id(data_id=product_business_id)
+            #         except:
+            #             logger.error(
+            #                 "删除 产品{} 出错，详细的出错信息为：{}".format(product_business_id, traceback.format_exc())
+            #             )
+            #             return restful.server_error(
+            #                 message=multiply_delete_product_failed, data={"traceback": traceback.format_exc()}
+            #             )
+            delete_multi_product_by_ids(business_ids)
 
         return restful.ok(message=multiply_delete_product_success)
     except:
@@ -450,7 +450,7 @@ def add_dealer_product():
     if result:
         logger.info("新增产品 {} 出错，产品已存在！".format(product_name))
         return restful.server_error(
-            message="新增产品出错，产品已存在！",
+            message=add_dealer_product_failed,
             data={"traceback": "新增产品 {} 出错，产品已存在！".format(product_name)}
         )
 
@@ -459,8 +459,8 @@ def add_dealer_product():
         crud.add_dealer_product(data=params_dict)
     except:
         logger.info("新增 经销商产品 出错，详细的出错信息为：{}".format(traceback.format_exc()))
-        return restful.server_error(message=add_product_failed, data={"traceback": traceback.format_exc()})
-    return restful.ok(message=add_product_success)
+        return restful.server_error(message=add_dealer_product_failed, data={"traceback": traceback.format_exc()})
+    return restful.ok(message=add_dealer_product_success)
 
 
 @data_bp.route("/update_dealer_product", methods=["POST"])
@@ -550,24 +550,25 @@ def dealer_product_multi_delete():
         )
 
         if business_ids:
-            # TODO 这个批量删除可以优化
-            for product_business_id in business_ids:
-
-                # 先查一下数据库看有没有这个数据
-                product_data = crud.get_dealer_product_by_business_id(business_id=product_business_id)
-                if product_data:  # 如果有这条数据
-                    # 执行删除
-                    try:
-                        crud.delete_dealer_product_by_business_id(data_id=product_business_id)
-                    except:
-                        logger.error(
-                            "删除 经销商产品{} 出错，详细的出错信息为：{}".format(
-                                product_business_id, traceback.format_exc()
-                            )
-                        )
-                        return restful.server_error(
-                            message=multiply_delete_product_failed, data={"traceback": traceback.format_exc()}
-                        )
+            # 这个批量删除可以优化
+            delete_multi_dealer_product_by_ids(business_ids)
+        #     for product_business_id in business_ids:
+        #
+        #         # 先查一下数据库看有没有这个数据
+        #         product_data = crud.get_dealer_product_by_business_id(business_id=product_business_id)
+        #         if product_data:  # 如果有这条数据
+        #             # 执行删除
+        #             try:
+        #                 crud.delete_dealer_product_by_business_id(data_id=product_business_id)
+        #             except:
+        #                 logger.error(
+        #                     "删除 经销商产品{} 出错，详细的出错信息为：{}".format(
+        #                         product_business_id, traceback.format_exc()
+        #                     )
+        #                 )
+        #                 return restful.server_error(
+        #                     message=multiply_delete_product_failed, data={"traceback": traceback.format_exc()}
+        #                 )
 
         return restful.ok(message=multiply_delete_product_success)
     except:

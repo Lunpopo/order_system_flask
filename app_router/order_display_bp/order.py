@@ -5,9 +5,7 @@ from gkestor_common_logger import Logger
 
 from app_router.models import order_crud, crud
 from app_router.order_display_bp.order_lib import order_stock_data_list, search_stock_product
-from messages.messages import add_purchase_order_success, add_purchase_order_failed, del_purchase_order_success, \
-    del_purchase_order_failed, add_outbound_order_success, add_outbound_order_failed, del_outbound_order_failed, \
-    del_outbound_order_success, add_outbound_order_not_zero, add_purchase_order_not_zero
+from messages.messages import *
 from utils import restful
 from utils.date_utils import time_to_timestamp
 

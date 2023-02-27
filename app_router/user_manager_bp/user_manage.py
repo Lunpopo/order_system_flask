@@ -9,9 +9,7 @@ from jose import ExpiredSignatureError
 from app_router.models import user_crud
 from app_router.user_manager_bp.user_lib import check_user, generate_routes, filter_routes_by_role
 from configs.contents import ACCESS_TOKEN_EXPIRE_MINUTES
-from messages.messages import add_menu_success, add_menu_failed, delete_menu_success, delete_menu_failed, \
-    update_menu_success, update_menu_failed, add_role_success, add_role_failed, delete_role_failed, delete_role_success, \
-    update_role_success, update_role_failed
+from messages.messages import *
 from utils import restful
 from utils.authentication import create_access_token, decode_token
 from utils.date_utils import time_to_timestamp

@@ -7,6 +7,8 @@ from enums.enums import OrderNameEnum
 
 
 # 别名
+from exceptions.product_exception import *
+
 A = aliased(DealerProductList)
 B = aliased(ProductList)
 
@@ -130,8 +132,6 @@ def get_all_dealer_product(product_name, dealer_name, order_by='-update_time'):
                 if order_name in OrderNameEnum.__members__:
                     result_tuple = db.session.query(A, B).join(B, A.product_id == B.business_id).filter(
                         B.product_name.like('%{}%'.format(product_name))).order_by(desc(order_name)).all()
-                    # result_list = DealerProductList.query.filter(DealerProductList.product_name.like(
-                    #     '%{}%'.format(product_name))).order_by(desc(order_name)).all()
                 else:
                     # 不在enum里面的就用 update_time 降序
                     result_tuple = db.session.query(A, B).join(B, A.product_id == B.business_id).filter(
@@ -539,8 +539,7 @@ def add_product(data: dict):
         return ProductList.query.order_by(ProductList.create_time.desc()).first()
     except:
         db.session.rollback()
-        # TODO 添加自定义错误
-        raise Exception
+        raise AddProductException
 
 
 def add_dealer_product(data: dict):
@@ -555,8 +554,7 @@ def add_dealer_product(data: dict):
         return DealerProductList.query.order_by(DealerProductList.create_time.desc()).first()
     except:
         db.session.rollback()
-        # TODO 添加自定义错误
-        raise Exception
+        raise AddDealerProductException
 
 
 def update_product_by_business_id(data_id: str, data):
@@ -575,8 +573,7 @@ def update_product_by_business_id(data_id: str, data):
             db.session.commit()
     except:
         db.session.rollback()
-        # TODO 添加自定义错误
-        raise Exception
+        raise UpdateProductException
 
 
 def update_dealer_product_by_business_id(data_id: str, data):
@@ -595,8 +592,7 @@ def update_dealer_product_by_business_id(data_id: str, data):
             db.session.commit()
     except:
         db.session.rollback()
-        # TODO 添加自定义错误
-        raise Exception
+        raise UpdateDealerProductException
 
 
 def delete_product_by_business_id(data_id: str):
@@ -610,7 +606,7 @@ def delete_product_by_business_id(data_id: str):
         db.session.commit()
     except:
         db.session.rollback()
-        raise Exception
+        raise DeleteProductException
 
 
 def delete_dealer_product_by_business_id(data_id: str):
@@ -624,7 +620,35 @@ def delete_dealer_product_by_business_id(data_id: str):
         db.session.commit()
     except:
         db.session.rollback()
-        raise Exception
+        raise DeleteDealerProductException
+
+
+def delete_multi_product_by_ids(data_ids: list):
+    """
+    根据 产品id数组 批量删除产品
+    :param data_ids: 产品id
+    :return:
+    """
+    try:
+        ProductList.query.filter(ProductList.business_id.in_(data_ids)).delete()
+        db.session.commit()
+    except:
+        db.session.rollback()
+        raise MultiDeleteProductException
+
+
+def delete_multi_dealer_product_by_ids(data_ids: list):
+    """
+    根据 产品id数组 批量删除经销商产品
+    :param data_ids: 产品id
+    :return:
+    """
+    try:
+        DealerProductList.query.filter(DealerProductList.business_id.in_(data_ids)).delete()
+        db.session.commit()
+    except:
+        db.session.rollback()
+        raise MultiDeleteDealerProductException
 
 
 def get_dealer_list_by_name(name: str):

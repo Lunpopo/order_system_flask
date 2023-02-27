@@ -5,6 +5,7 @@ from app_router.models.database import db
 from app_router.models.models import PurchaseOrder, PurchaseOrderList, OutboundOrder, OutboundOrderList, \
     DealerProductList, ProductList
 from app_router.order_display_bp.order_lib import format_purchase_product, format_outbound_product
+from exceptions.order_exception import *
 
 
 def duplicate_remove_outbound_product(outbound_product_list):
@@ -360,8 +361,7 @@ def add_purchase_order(data: dict):
         return purchase_order_obj
     except:
         db.session.rollback()
-        # TODO 添加自定义错误
-        raise Exception
+        raise AddPurchaseException
 
 
 def get_products_by_purchase_order_id(data_id):
@@ -375,7 +375,6 @@ def get_products_by_purchase_order_id(data_id):
     result_tuple_list = db.session.query(A, B).join(B, A.product_id == B.business_id).filter(
         A.purchase_order_id == data_id).all()
     result_list = format_purchase_product(data_list=result_tuple_list)
-
     return {"data": result_list, "count": PurchaseOrderList.query.filter_by(purchase_order_id=data_id).count()}
 
 
@@ -385,13 +384,13 @@ def del_purchase_order_by_id(data_id):
     :param data_id: 订单id
     :return:
     """
-    # 1. 删除所有的订购产品
+    # 1. 删除所有的入库产品
     try:
         PurchaseOrderList.query.filter(PurchaseOrderList.purchase_order_id == data_id).delete()
         db.session.commit()
     except:
         db.session.rollback()
-        raise Exception
+        raise DeletePurchaseProductListException
 
     # 2. 删除订单
     try:
@@ -399,7 +398,7 @@ def del_purchase_order_by_id(data_id):
         db.session.commit()
     except:
         db.session.rollback()
-        raise Exception
+        raise DeletePurchaseException
 
 
 def add_purchase_product(data: dict):
@@ -416,8 +415,7 @@ def add_purchase_product(data: dict):
         return purchase_order_obj
     except:
         db.session.rollback()
-        # TODO 添加自定义错误
-        raise Exception
+        raise AddPurchaseProductException
 
 
 def get_outbound_order_limit(dealer_name, page: int = 0, limit: int = 100):
@@ -454,8 +452,7 @@ def add_outbound_order(data: dict):
         return outbound_obj
     except:
         db.session.rollback()
-        # TODO 添加自定义错误
-        raise Exception
+        raise AddOutboundException
 
 
 def get_products_by_outbound_order_id(data_id):
@@ -470,7 +467,6 @@ def get_products_by_outbound_order_id(data_id):
     result_tuple_list = db.session.query(A, C).join(B, A.dealer_product_id == B.business_id).join(
         C, B.product_id == C.business_id).filter(A.outbound_order_id == data_id).all()
     result_list = format_outbound_product(data_list=result_tuple_list)
-
     return {"data": result_list, "count": OutboundOrderList.query.filter_by(outbound_order_id=data_id).count()}
 
 
@@ -495,7 +491,7 @@ def del_outbound_order_by_id(data_id):
         db.session.commit()
     except:
         db.session.rollback()
-        raise Exception
+        raise DeleteOutboundProductListException
 
     # 2. 删除订单
     try:
@@ -503,7 +499,7 @@ def del_outbound_order_by_id(data_id):
         db.session.commit()
     except:
         db.session.rollback()
-        raise Exception
+        raise DeleteOutboundException
 
 
 def add_outbound_product(data: dict):
@@ -520,5 +516,4 @@ def add_outbound_product(data: dict):
         return outbound_obj
     except:
         db.session.rollback()
-        # TODO 添加自定义错误
-        raise Exception
+        raise AddOutboundProductException
