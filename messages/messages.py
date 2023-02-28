@@ -42,16 +42,18 @@ del_outbound_order_failed = "删除出库单失败！"
 
 
 # [user]
-user_exist = "用户名已存在！"
+user_exist = "用户已存在！"
+group_not_exist = "角色不存在！"
 password_error = "密码错误！"
 update_password_success = "更新密码成功！"
-add_user_success = "新增用户数据成功！"
-add_user_failed = "新增用户数据失败！"
+add_user_success = "新增用户成功！"
+add_user_failed = "新增用户失败！"
+delete_user_success = '删除用户成功！'
+delete_user_failed = '删除用户失败！'
 register_success = "用户注册成功！"
 update_user_success = "更新用户信息成功！"
 update_user_failed = "更新用户信息失败！"
 update_user_group_success = "更新用户组成功！"
-delete_user_success = "用户删除成功！"
 multiply_delete_user_success = "批量删除用户成功！"
 update_permission_success = "更新权限成功！"
 

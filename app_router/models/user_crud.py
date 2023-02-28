@@ -5,6 +5,40 @@ from app_router.models.database import db
 from app_router.models.models import AuthUser, AuthGroup, AuthApi
 from enums.enums import MenuEnum, MenuHiddenEnum
 from exceptions.user_exception import *
+from utils.authentication import pwd_context
+
+
+def add_user(data):
+    """
+    添加用户信息
+    :param data:
+    :return:
+    """
+    try:
+        data['password'] = pwd_context.hash(data['password'])
+        user_obj = AuthUser(**data)
+        db.session.add(user_obj)
+        db.session.commit()
+        db.session.flush()
+        return user_obj
+    except:
+        db.session.rollback()
+        raise AddUserException
+
+
+def delete_user(username):
+    """
+    删除用户
+    :param username:
+    :return:
+    """
+    try:
+        AuthUser.query.filter_by(username=username).delete()
+        db.session.commit()
+        db.session.flush()
+    except:
+        db.session.rollback()
+        raise DeleteUserException
 
 
 def get_user_by_name(username):
@@ -23,23 +57,6 @@ def get_user_by_id(user_id):
     :return:
     """
     return AuthUser.query.filter_by(business_id=user_id).first()
-
-
-def add_user(data):
-    """
-    添加用户信息
-    :param data:
-    :return:
-    """
-    try:
-        user_obj = AuthUser(**data)
-        db.session.add(user_obj)
-        db.session.commit()
-        db.session.flush()
-        return user_obj
-    except:
-        db.session.rollback()
-        raise AddUserException
 
 
 def get_group_obj_by_user_id(user_id):

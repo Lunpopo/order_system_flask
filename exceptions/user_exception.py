@@ -15,6 +15,17 @@ class AddUserException(Exception):
         return self.msg
 
 
+class DeleteUserException(Exception):
+    """
+    删除用户自定义异常
+    """
+    def __init__(self, msg=delete_user_failed):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+
+
 class AddGroupException(Exception):
     """
     添加角色自定义异常

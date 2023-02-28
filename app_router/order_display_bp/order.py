@@ -13,6 +13,25 @@ order_bp = Blueprint("order_display", __name__, url_prefix="/order")
 logger = Logger()
 
 
+@order_bp.route("/get_transaction_list", methods=["GET"])
+def get_transaction_list():
+    """
+    获取交易信息列表（前10的经销商数据）
+    :return:
+    """
+    data = {
+      'total': 20,
+      'items': [{
+        'order_no': 'fuck hash',
+        'timestamp': '202020200',
+        'username': 'admin',
+        'price': '1920000',
+        'status': 0
+      }]
+    }
+    return restful.ok(message="获取交易信息成功！", data=data)
+
+
 @order_bp.route("/get_outbound_stock_all_data", methods=["GET"])
 def get_outbound_stock_all_data():
     """

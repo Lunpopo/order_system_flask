@@ -7,7 +7,7 @@ from gkestor_common_logger import Logger
 from jose import ExpiredSignatureError
 
 from app_router.models import user_crud
-from app_router.user_manager_bp.user_lib import check_user, generate_routes, filter_routes_by_role
+from app_router.user_manager_bp.user_lib import check_user, generate_routes, filter_routes_by_role, get_current_ip
 from configs.contents import ACCESS_TOKEN_EXPIRE_MINUTES
 from messages.messages import *
 from utils import restful
@@ -39,6 +39,57 @@ def login():
         "token": "Bearer:{}".format(create_access_token(user.business_id, expires_delta=access_token_expires))
     }
     return restful.ok(message='登录成功！', data=data)
+
+
+@user_bp.route("/delete_user", methods=["POST"])
+def delete_user():
+    """
+    删除用户api
+    :return:
+    """
+    data = request.get_data(as_text=True)
+    params_dict = json.loads(data)
+    username = params_dict.get("username")
+
+    user = user_crud.get_user_by_name(username)
+    if user:
+        # 删除用户
+        user_crud.delete_user(username)
+    else:
+        return restful.server_error(message=delete_user_failed, data=username)
+    return restful.ok(message=delete_user_success, data=username)
+
+
+@user_bp.route("/create_user", methods=["POST"])
+def create_user():
+    """
+    新增用户api
+    :return:
+    """
+    data = request.get_data(as_text=True)
+    params_dict = json.loads(data)
+    username = params_dict.get("username")
+    password = params_dict.get('password')
+    group_name = params_dict.get('group_name')
+    add_user_dict = {
+        'username': username,
+        'password': password,
+        "register_ip": get_current_ip(),
+        "status": 0
+    }
+
+    user = user_crud.get_user_by_name(username)
+    if not user:
+        # 新增用户
+        # 查询组所在地
+        group_obj = user_crud.get_group_by_name(group_name)
+        if group_obj is None:
+            return restful.server_error(message=add_user_failed, data={'group_name': group_name})
+        add_user_dict['group_id'] = group_obj.business_id
+        user_crud.add_user(add_user_dict)
+    else:
+        return restful.server_error(message=add_user_failed, data=username)
+    return restful.ok(message=add_user_success, data=username)
 
 
 @user_bp.route("/info", methods=["GET"])
