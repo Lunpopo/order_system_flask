@@ -5,54 +5,6 @@ from sqlalchemy.dialects.mysql import FLOAT
 from enums.enums import ProductScentEnum
 
 
-# class StockList(db.Model):
-#     """
-#     股票买卖列表
-#     """
-#     __tablename__ = 'stock_list'
-#
-#     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()), unique=True, nullable=False,
-#                    comment="哈希自动生成id")
-#     stock_name = db.Column(db.String(100), nullable=False, comment="股票名称，例如：索菲亚")
-#     stock_code = db.Column(db.String(10), nullable=False, comment="股票代码，例如：002572（深A）")
-#     buying_price = db.Column(FLOAT(precision=11, scale=2), nullable=False, comment="买入价格")
-#
-#     selling_piece_one = db.Column(FLOAT(precision=11, scale=2), nullable=False, comment="卖出档位1（10%）")
-#     selling_piece_two = db.Column(FLOAT(precision=11, scale=2), nullable=False, comment="卖出档位2（20%）")
-#     count = db.Column(db.Integer, nullable=False, comment="数量")
-#     price = db.Column(FLOAT(precision=11, scale=2), nullable=False, comment="价格")
-#     buying_time = db.Column(db.TIMESTAMP, nullable=True, comment="买入时间")
-#     price_markup_one = db.Column(FLOAT(precision=11, scale=2), nullable=False, comment="加仓价格")
-#     price_markup_two = db.Column(FLOAT(precision=11, scale=2), nullable=False, comment="重仓价格")
-#     remarks = db.Column(db.Text, nullable=True, comment="备注")
-#
-#     # 公共字段
-#     is_delete = db.Column(db.Integer, default=0, nullable=False,
-#                           comment="逻辑删除，查询的时候按照 filter is_delete != 0 来过滤已经逻辑删除的数据")
-#     create_time = db.Column(
-#         db.TIMESTAMP, nullable=False, default=db.func.now(), server_default=db.func.now(),
-#         comment="创建时间，修改数据不会自动更改"
-#     )
-#     update_time = db.Column(
-#         db.TIMESTAMP, nullable=False, server_default=db.text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'),
-#         comment="更新时间"
-#     )
-#     business_id = db.Column(db.String(36), default=lambda: str(uuid.uuid4()), nullable=False, unique=True,
-#                             comment="业务id（使用雪花算法生成唯一id）")
-#
-#     def __repr__(self):
-#         return '<ProductList %r>' % self.product_name
-#
-#     def as_dict(self):
-#         _dict = {}
-#         for c in self.__table__.columns:
-#             if not isinstance(c.type, db.Enum):
-#                 _dict[c.name] = getattr(self, c.name)
-#             else:
-#                 _dict[c.name] = getattr(self, c.name).name
-#         return _dict
-
-
 class AuthUser(db.Model):
     """
     用户表
@@ -191,35 +143,6 @@ class AuthApi(db.Model):
             else:
                 _dict[c.name] = getattr(self, c.name).name
         return _dict
-
-
-class AuthGroupApiRelation(db.Model):
-    """
-    多对多关联 auth_group 表 和 auth_api 表
-    """
-    __tablename__ = 'auth_group_api_relation'
-
-    id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()), unique=True,
-                   nullable=False, comment="哈希自动生成id")
-    group_id = db.Column(db.String(32), comment="权限组的 business_id", nullable=False)
-    auth_api_id = db.Column(db.String(32), nullable=False, comment="api表的 business_id")
-
-    # 公共字段
-    is_delete = db.Column(db.Integer, default=0, nullable=False,
-                          comment="逻辑删除，查询的时候按照 filter is_delete != 0 来过滤已经逻辑删除的数据")
-    create_time = db.Column(
-        db.TIMESTAMP, nullable=False, default=db.func.now(), server_default=db.func.now(),
-        comment="创建时间，修改数据不会自动更改"
-    )
-    update_time = db.Column(
-        db.TIMESTAMP, nullable=False, server_default=db.text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'),
-        comment="更新时间"
-    )
-    business_id = db.Column(db.String(36), default=lambda: str(uuid.uuid4()), nullable=False, unique=True,
-                            comment="业务id（使用雪花算法生成唯一id）")
-
-    def __repr__(self):
-        return '<AuthGroupApiRelation %r>' % self.group_id
 
 
 class ProductList(db.Model):

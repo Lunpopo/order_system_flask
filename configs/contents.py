@@ -4,10 +4,10 @@
 import os
 
 # 模板配置
-ROOT_DIR = os.path.abspath(os.path.dirname('.'))
+# ROOT_DIR = os.path.abspath(os.path.dirname('.'))
 
-STATIC_DIRECTORY = os.path.join(ROOT_DIR, "static")
-TEMPLATE_DIRECTORY = os.path.join(ROOT_DIR, "templates/order_system")
+# STATIC_DIRECTORY = os.path.join(ROOT_DIR, "static")
+# TEMPLATE_DIRECTORY = os.path.join(ROOT_DIR, "templates/order_system")
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 TEMP_DIR = os.path.join(BASE_DIR, "../tmp")
