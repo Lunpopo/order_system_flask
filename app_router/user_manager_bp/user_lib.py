@@ -85,6 +85,8 @@ def generate_routes(all_menu_query_list):
         menu_type = auth_api_obj.menu_type
         if api_parent_id is None and menu_type == 0:
             permission = auth_api_obj.permission
+            router_path = auth_api_obj.router_path
+
             # 展示菜单的权限，用, 隔开
             if ":" in permission:
                 permissions = permission.split(":")
@@ -93,7 +95,7 @@ def generate_routes(all_menu_query_list):
                 permissions = permission
                 # permissions_label = [UserGroupEnum(int(permission)).name]
             _dict = {
-                "path": auth_api_obj.router_path,
+                "path": router_path,
                 'component': auth_api_obj.component_path,
                 'alwaysShow': True,
                 'meta': {
@@ -122,15 +124,16 @@ def generate_routes(all_menu_query_list):
             children_obj_list = []
             for children_api_obj in children_api_list:
                 children_permission = children_api_obj.permission
+                children_router_path = children_api_obj.router_path
+                # 去除 二级目录 下 router_path 的/（一级目录不用去除）
+                children_router_path = children_router_path.split('/')[-1]
                 # 展示菜单的权限，用, 隔开
                 if ":" in children_permission:
                     children_permission = children_permission.split(":")
-                    # children_permissions_label = [UserGroupEnum(int(x)).name for x in children_permission]
                 else:
                     children_permission = children_permission
-                    # children_permissions_label = [UserGroupEnum(int(children_permission)).name]
                 children_api_dict = {
-                    "path": children_api_obj.router_path,
+                    "path": children_router_path,
                     'component': children_api_obj.component_path,
                     'meta': {
                         'roles': children_permission

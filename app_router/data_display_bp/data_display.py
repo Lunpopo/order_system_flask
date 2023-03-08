@@ -10,6 +10,7 @@ from app_router.models import crud
 from app_router.models.crud import delete_multi_product_by_ids, delete_multi_dealer_product_by_ids
 from messages.messages import *
 from utils import restful
+from utils.authentication import auth_check
 from utils.date_utils import time_to_timestamp
 
 data_bp = Blueprint("data_display", __name__, url_prefix="/data")
@@ -22,6 +23,10 @@ def get_product_data():
     获取产品列表数据-自己的
     :return:
     """
+    is_login = auth_check(user_token=request.headers.get('Authorization'), api='data_display/get_product_data')
+    if not is_login:
+        return restful.unauth()
+
     page = int(request.args.get("page"))
     limit = int(request.args.get("limit"))
     order_by = request.args.get("order_by")
@@ -67,8 +72,11 @@ def get_all_product_data():
     获取所有的产品列表数据——用于下载
     :return:
     """
-    order_by = request.args.get("order_by")
+    is_login = auth_check(user_token=request.headers.get('Authorization'), api='data_display/get_all_product_data')
+    if not is_login:
+        return restful.unauth()
 
+    order_by = request.args.get("order_by")
     params_dict = {"order_by": order_by}
     logger.info("/get_all_product_data 前端的入参参数：\n{}".format(json.dumps(params_dict, indent=4, ensure_ascii=False)))
 
@@ -101,6 +109,10 @@ def search_product():
     搜索产品数据
     :return:
     """
+    is_login = auth_check(user_token=request.headers.get('Authorization'), api='data_display/search_product')
+    if not is_login:
+        return restful.unauth()
+
     product_name = request.args.get("title")
     page = int(request.args.get("page"))
     limit = int(request.args.get("limit"))
@@ -142,9 +154,13 @@ def search_product():
 @data_bp.route("/add_product", methods=["POST"])
 def add_product():
     """
-    新增产品——ajax
+    新增产品-自己的货单表格
     :return:
     """
+    is_login = auth_check(user_token=request.headers.get('Authorization'), api='data_display/add_product')
+    if not is_login:
+        return restful.unauth()
+
     # 从前端获取参数
     product_name = request.args.get("product_name")
     specifications = request.args.get("specifications")
@@ -208,6 +224,10 @@ def update_product():
     更新产品信息-自己的货单
     :return:
     """
+    is_login = auth_check(user_token=request.headers.get('Authorization'), api='data_display/update_product')
+    if not is_login:
+        return restful.unauth()
+
     # 从前端获取参数
     product_name = request.args.get("product_name")
     specifications = request.args.get("specifications")
@@ -268,6 +288,10 @@ def delete_product():
     根据前端传入的 业务id 删除这条产品数据
     :return:
     """
+    is_login = auth_check(user_token=request.headers.get('Authorization'), api='data_display/delete_product')
+    if not is_login:
+        return restful.unauth()
+
     data = request.get_data(as_text=True)
     params_dict = json.loads(data)
     logger.info("/delete_product 前端传入的参数为：\n{}".format(json.dumps(params_dict, indent=4, ensure_ascii=False)))
@@ -290,6 +314,10 @@ def product_multi_delete():
     删除多条产品数据
     :return:
     """
+    is_login = auth_check(user_token=request.headers.get('Authorization'), api='data_display/product_multi_delete')
+    if not is_login:
+        return restful.unauth()
+
     try:
         data = request.get_data(as_text=True)
         # 业务id的集合
@@ -328,6 +356,12 @@ def get_all_dealer_product_data():
     获取所有的经销商产品列表数据——用于下载
     :return:
     """
+    is_login = auth_check(
+        user_token=request.headers.get('Authorization'), api='data_display/get_all_dealer_product_data'
+    )
+    if not is_login:
+        return restful.unauth()
+
     product_name = request.args.get("title")
     dealer_name = request.args.get("dealer_name")
     order_by = request.args.get("order_by")
@@ -357,6 +391,12 @@ def get_dealer_list():
     获取经销商名单列表
     :return:
     """
+    is_login = auth_check(
+        user_token=request.headers.get('Authorization'), api='data_display/get_dealer_list'
+    )
+    if not is_login:
+        return restful.unauth()
+
     result = crud.get_dealer_list()
     result_data = result.get("data")
     # json格式化
@@ -379,6 +419,12 @@ def search_dealer_product():
     搜索经销商产品数据
     :return:
     """
+    is_login = auth_check(
+        user_token=request.headers.get('Authorization'), api='data_display/search_dealer_product'
+    )
+    if not is_login:
+        return restful.unauth()
+
     title = request.args.get("title")
     dealer_name = request.args.get("dealer_name")
     page = int(request.args.get("page"))
@@ -417,6 +463,12 @@ def add_dealer_product():
     新增经销商产品
     :return:
     """
+    is_login = auth_check(
+        user_token=request.headers.get('Authorization'), api='data_display/add_dealer_product'
+    )
+    if not is_login:
+        return restful.unauth()
+
     product_id = request.args.get("product_id")
     product_name = request.args.get("product_name")
     belong_to = request.args.get("belong_to")
@@ -469,6 +521,12 @@ def update_dealer_product():
     更新经销商产品数据
     :return:
     """
+    is_login = auth_check(
+        user_token=request.headers.get('Authorization'), api='data_display/update_dealer_product'
+    )
+    if not is_login:
+        return restful.unauth()
+
     product_id = request.args.get("product_id")
     product_name = request.args.get("product_name")
     belong_to = request.args.get("belong_to")
@@ -515,6 +573,12 @@ def dealer_delete_product():
     根据前端传入的 业务id 删除这条经销商产品数据
     :return:
     """
+    is_login = auth_check(
+        user_token=request.headers.get('Authorization'), api='data_display/delete_dealer_product'
+    )
+    if not is_login:
+        return restful.unauth()
+
     data = request.get_data(as_text=True)
     params_dict = json.loads(data)
     logger.info(
@@ -539,6 +603,12 @@ def dealer_product_multi_delete():
     删除多条经销商产品数据
     :return:
     """
+    is_login = auth_check(
+        user_token=request.headers.get('Authorization'), api='data_display/dealer_product_multi_delete'
+    )
+    if not is_login:
+        return restful.unauth()
+
     try:
         data = request.get_data(as_text=True)
         # 业务id的集合

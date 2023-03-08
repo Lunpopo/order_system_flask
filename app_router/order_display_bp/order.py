@@ -7,6 +7,7 @@ from app_router.models import order_crud, crud
 from app_router.order_display_bp.order_lib import order_stock_data_list, search_stock_product
 from messages.messages import *
 from utils import restful
+from utils.authentication import auth_check
 from utils.date_utils import time_to_timestamp
 
 order_bp = Blueprint("order_display", __name__, url_prefix="/order")
@@ -19,17 +20,66 @@ def get_transaction_list():
     获取交易信息列表（前10的经销商数据）
     :return:
     """
+    is_login = auth_check(user_token=request.headers.get('Authorization'), api='order/get_transaction_list')
+    if not is_login:
+        return restful.unauth()
+
+    result_data = order_crud.get_outbound_transaction_statistic()
+    dealer_names = []
+    return_data = []
+    index = 1
+    for outbound_obj in result_data:
+        _dict = {
+            "index": index,
+            # 经销商名称
+            "name": outbound_obj[0],
+            # 经销商的销售金额
+            "outbound_price": outbound_obj[1]
+        }
+        # 加入经销商的列表
+        dealer_names.append(outbound_obj[0])
+        return_data.append(_dict)
+        index += 1
+
     data = {
-      'total': 20,
-      'items': [{
-        'order_no': 'fuck hash',
-        'timestamp': '202020200',
-        'username': 'admin',
-        'price': '1920000',
-        'status': 0
-      }]
+        'total': len(return_data),
+        'items': return_data
     }
     return restful.ok(message="获取交易信息成功！", data=data)
+
+
+@order_bp.route("/get_product_transaction_list", methods=["GET"])
+def get_product_transaction_list():
+    """
+    获取产品交易信息列表（从销量最高的产品往下排列）
+    :return:
+    """
+    is_login = auth_check(user_token=request.headers.get('Authorization'), api='order/get_product_transaction_list')
+    if not is_login:
+        return restful.unauth()
+
+    result_data = order_crud.get_product_transaction_statistic()
+    # dealer_names = []
+    # return_data = []
+    # index = 1
+    # for outbound_obj in result_data:
+    #     _dict = {
+    #         "index": index,
+    #         # 经销商名称
+    #         "name": outbound_obj[0],
+    #         # 经销商的销售金额
+    #         "purchase_price": outbound_obj[1]
+    #     }
+    #     # 加入经销商的列表
+    #     dealer_names.append(outbound_obj[0])
+    #     return_data.append(_dict)
+    #     index += 1
+
+    data = {
+        'count': len(result_data),
+        'items': result_data
+    }
+    return restful.ok(message="获取产品交易信息列表成功！", data=data)
 
 
 @order_bp.route("/get_outbound_stock_all_data", methods=["GET"])
@@ -38,6 +88,10 @@ def get_outbound_stock_all_data():
     获取出库数据信息-用于下载
     :return:
     """
+    is_login = auth_check(user_token=request.headers.get('Authorization'), api='order/get_outbound_stock_all_data')
+    if not is_login:
+        return restful.unauth()
+
     # 名称搜索
     product_name = request.args.get("title")
 
@@ -70,6 +124,10 @@ def get_purchase_stock_all_data():
     获取入库数据信息-用于下载
     :return:
     """
+    is_login = auth_check(user_token=request.headers.get('Authorization'), api='order/get_purchase_stock_all_data')
+    if not is_login:
+        return restful.unauth()
+
     # 名称搜索
     product_name = request.args.get("title")
 
@@ -102,6 +160,10 @@ def get_stock_all_data():
     获取总库存数据信息-用于下载
     :return:
     """
+    is_login = auth_check(user_token=request.headers.get('Authorization'), api='order/get_stock_all_data')
+    if not is_login:
+        return restful.unauth()
+
     # 名称搜索
     product_name = request.args.get("title")
 
@@ -131,6 +193,10 @@ def get_purchase_stock_data_list():
     获取入库数据信息
     :return:
     """
+    is_login = auth_check(user_token=request.headers.get('Authorization'), api='order/get_purchase_stock_data_list')
+    if not is_login:
+        return restful.unauth()
+
     page = int(request.args.get("page"))
     limit = int(request.args.get("limit"))
     # 名称搜索
@@ -170,6 +236,10 @@ def get_outbound_stock_data_list():
     获取出库数据信息
     :return:
     """
+    is_login = auth_check(user_token=request.headers.get('Authorization'), api='order/get_outbound_stock_data_list')
+    if not is_login:
+        return restful.unauth()
+
     page = int(request.args.get("page"))
     limit = int(request.args.get("limit"))
     # 名称搜索
@@ -210,6 +280,10 @@ def get_stock_data_list():
     获取总库存数据信息
     :return:
     """
+    is_login = auth_check(user_token=request.headers.get('Authorization'), api='order/get_stock_data_list')
+    if not is_login:
+        return restful.unauth()
+
     page = int(request.args.get("page"))
     limit = int(request.args.get("limit"))
     # 名称搜索
@@ -247,6 +321,10 @@ def get_outbound_pie_statistics():
     获取各个经销商的出库单的金额统计饼图信息
     :return:
     """
+    is_login = auth_check(user_token=request.headers.get('Authorization'), api='order/get_outbound_pie_statistics')
+    if not is_login:
+        return restful.unauth()
+
     result_data = order_crud.get_outbound_pie_statistic()
 
     dealer_names = []
@@ -274,6 +352,9 @@ def get_outbound_bar_statistics():
     获取各个经销商的出库单的金额统计 柱状图 信息
     :return:
     """
+    is_login = auth_check(user_token=request.headers.get('Authorization'), api='order/get_outbound_bar_statistics')
+    if not is_login:
+        return restful.unauth()
     result_data = order_crud.get_outbound_bar_statistic()
     return restful.ok(message="获取各个经销商出库金额统计信息成功！", data=result_data)
 
@@ -284,6 +365,9 @@ def get_purchase_price_statistics():
     获取入库单的金额统计信息
     :return:
     """
+    is_login = auth_check(user_token=request.headers.get('Authorization'), api='order/get_purchase_price_statistics')
+    if not is_login:
+        return restful.unauth()
     result_data = order_crud.get_purchase_statistic()
     data_list = []
     for _ in result_data:
@@ -311,6 +395,10 @@ def get_purchase_piece_statistics():
     获取入库单的数量统计信息
     :return:
     """
+    is_login = auth_check(user_token=request.headers.get('Authorization'), api='order/get_purchase_piece_statistics')
+    if not is_login:
+        return restful.unauth()
+
     result_data = order_crud.get_purchase_statistic()
     data_list = []
     for _ in result_data:
@@ -338,6 +426,10 @@ def get_outbound_price_statistics():
     获取出库单的金额统计信息
     :return:
     """
+    is_login = auth_check(user_token=request.headers.get('Authorization'), api='order/get_outbound_price_statistics')
+    if not is_login:
+        return restful.unauth()
+
     result_data = order_crud.get_outbound_statistic()
     data_list = []
     for _ in result_data:
@@ -365,6 +457,10 @@ def get_outbound_piece_statistics():
     获取出库单的数量统计信息
     :return:
     """
+    is_login = auth_check(user_token=request.headers.get('Authorization'), api='order/get_outbound_piece_statistics')
+    if not is_login:
+        return restful.unauth()
+
     result_data = order_crud.get_outbound_statistic()
     data_list = []
     for _ in result_data:
@@ -393,6 +489,12 @@ def get_total_purchase_price_and_piece():
     获取入库单的总金额和总数量
     :return:
     """
+    is_login = auth_check(
+        user_token=request.headers.get('Authorization'), api='order/get_total_purchase_price_and_piece'
+    )
+    if not is_login:
+        return restful.unauth()
+
     order_total_price = order_crud.get_total_purchase_price()
     order_total_piece = order_crud.get_total_purchase_piece()
     data = {
@@ -408,6 +510,12 @@ def get_total_outbound_price_and_piece():
     获取出库单的总金额和总数量
     :return:
     """
+    is_login = auth_check(
+        user_token=request.headers.get('Authorization'), api='order/get_total_outbound_price_and_piece'
+    )
+    if not is_login:
+        return restful.unauth()
+
     order_total_price = order_crud.get_total_outbound_price()
     order_total_piece = order_crud.get_total_outbound_piece()
     data = {
@@ -423,6 +531,12 @@ def get_purchase_order():
     获取入库单列表
     :return:
     """
+    is_login = auth_check(
+        user_token=request.headers.get('Authorization'), api='order/get_purchase_order'
+    )
+    if not is_login:
+        return restful.unauth()
+
     page = int(request.args.get("page"))
     limit = int(request.args.get("limit"))
 
@@ -464,6 +578,11 @@ def get_purchase_product_details():
     获取入库单的产品列表详情信息
     :return:
     """
+    is_login = auth_check(
+        user_token=request.headers.get('Authorization'), api='order/get_purchase_product_details'
+    )
+    if not is_login:
+        return restful.unauth()
     # 订单ID
     purchase_order_id = request.args.get("purchase_order_id")
 
@@ -509,6 +628,12 @@ def add_purchase_order():
     新增一条入库单
     :return:
     """
+    is_login = auth_check(
+        user_token=request.headers.get('Authorization'), api='order/add_purchase_order'
+    )
+    if not is_login:
+        return restful.unauth()
+
     data = request.get_data(as_text=True)
     params_dict = json.loads(data)
     logger.info(
@@ -557,6 +682,12 @@ def del_purchase_order():
     根据 订单ID 删除一条入库单
     :return:
     """
+    is_login = auth_check(
+        user_token=request.headers.get('Authorization'), api='order/del_purchase_order'
+    )
+    if not is_login:
+        return restful.unauth()
+
     data = request.get_data(as_text=True)
     params_dict = json.loads(data)
     logger.info("/del_purchase_order 前端传入的参数为：\n{}".format(json.dumps(params_dict, indent=4, ensure_ascii=False)))
@@ -576,6 +707,12 @@ def get_outbound_order():
     获取出库单列表
     :return:
     """
+    is_login = auth_check(
+        user_token=request.headers.get('Authorization'), api='order/get_outbound_order'
+    )
+    if not is_login:
+        return restful.unauth()
+
     page = int(request.args.get("page"))
     limit = int(request.args.get("limit"))
     dealer_name = request.args.get('dealer_name')
@@ -619,6 +756,12 @@ def get_outbound_product_details():
     获取出库单的产品列表详情信息
     :return:
     """
+    is_login = auth_check(
+        user_token=request.headers.get('Authorization'), api='order/get_outbound_product_details'
+    )
+    if not is_login:
+        return restful.unauth()
+
     # 出库单ID
     outbound_order_id = request.args.get("outbound_order_id")
 
@@ -662,6 +805,12 @@ def add_outbound_order():
     新增一条出库单
     :return:
     """
+    is_login = auth_check(
+        user_token=request.headers.get('Authorization'), api='order/add_outbound_order'
+    )
+    if not is_login:
+        return restful.unauth()
+
     data = request.get_data(as_text=True)
     params_dict = json.loads(data)
     logger.info("/add_outbound_order 前端传入的参数为：\n{}".format(json.dumps(params_dict, indent=4, ensure_ascii=False)))
@@ -720,6 +869,12 @@ def del_outbound_order():
     根据 订单ID 删除一条出库单
     :return:
     """
+    is_login = auth_check(
+        user_token=request.headers.get('Authorization'), api='order/del_outbound_order'
+    )
+    if not is_login:
+        return restful.unauth()
+
     data = request.get_data(as_text=True)
     params_dict = json.loads(data)
     logger.info("/del_outbound_order 前端传入的参数为：\n{}".format(json.dumps(params_dict, indent=4, ensure_ascii=False)))

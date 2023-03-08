@@ -203,9 +203,121 @@ def get_outbound_pie_statistic():
         OutboundOrder.belong_to).order_by(desc('sum')).limit(5).all()
 
 
+def get_outbound_transaction_statistic():
+    """
+    获取各个经销商的出库单的交易额统计信息
+    :return:
+    """
+    return db.session.query(OutboundOrder.belong_to, func.sum(OutboundOrder.total_price).label('sum')).group_by(
+        OutboundOrder.belong_to).order_by(desc('sum')).all()
+
+
+def get_product_transaction_statistic():
+    """
+    获取各个产品的交易额统计信息
+    :return:
+    """
+    # 所有的出库产品列表（未去重合并产品）
+    all_product_list = []
+    # 所有的出库订单列表
+    outbound_list = OutboundOrder.query.all()
+    for outbound_obj in outbound_list:
+        outbound_id = outbound_obj.business_id
+        # 查询该出库订单所包含的产品列表
+        product_list = OutboundOrderList.query.filter_by(outbound_order_id=outbound_id).all()
+        for product_obj in product_list:
+            dealer_product_id = product_obj.dealer_product_id
+            dealer_product = DealerProductList.query.filter_by(business_id=dealer_product_id).first()
+            # 精确的产品
+            product = ProductList.query.filter_by(business_id=dealer_product.product_id).first()
+            _dict = dealer_product.as_dict()
+            _dict['product_name'] = product.product_name
+            _dict['specifications'] = product.specifications
+            _dict['quantity'] = product_obj.quantity
+            all_product_list.append(_dict)
+
+    # 合并所有产品数据（未去重）
+    merge_product = {}
+    # 先把key加上（初始化）
+    for product_obj in all_product_list:
+        merge_product[product_obj.get("product_name")] = []
+    for product_obj in all_product_list:
+        merge_product[product_obj.get("product_name")].append(product_obj)
+
+    # 根据产品名进行合并去重（已合并的产品）
+    merge_dict = remove_duplicate_product(data_list=merge_product)
+
+    return_list = []
+    # 初始化values的key
+    for product_name, product_obj_list in merge_dict.items():
+        return_product_dict = {
+            "name": "",
+            "outbound_price": 0
+        }
+        for product_obj in product_obj_list:
+            _product_name = "{}({}ML)".format(product_obj.get("product_name"), product_obj.get('specifications'))
+            return_product_dict['name'] = _product_name
+            count_price = product_obj.get('quantity') * product_obj.get('unit_price')
+            return_product_dict['outbound_price'] = float("{:.2f}".format(count_price))
+        return_list.append(return_product_dict)
+
+    # 排序（从大到小 ）
+    def _bubble_sort(arr):
+        """
+        冒泡排序
+        :param arr:
+        :return:
+        """
+        n = len(arr)
+        # 遍历所有数组元素
+        for i in range(n):
+            # Last i elements are already in place
+            for j in range(0, n - i - 1):
+                if arr[j]['outbound_price'] > arr[j + 1]['outbound_price']:
+                    arr[j], arr[j + 1] = arr[j + 1], arr[j]
+
+    _bubble_sort(return_list)
+    return_list.reverse()
+    return return_list
+
+
 def remove_duplicate_dealer_product(data_list):
     """
-    合并经销商产品（进行去重）
+    合并经销商产品（进行去重，根据经销商名字来进行去重合并）
+    :param data_list:
+    :return:
+    """
+    # 去重合并产品的数量
+    merge_dict = {}
+    for key, values in data_list.items():
+        # 每个经销的产品进行merge
+        merge_data_list = []
+        for index, product_obj in enumerate(values):
+            value_tuple = (product_obj.get('product_name'), product_obj.get('specifications'))
+
+            # 如果暂存的列表里有数据
+            if merge_data_list:
+                is_exist = False
+                for _product_obj in merge_data_list:
+                    _value_tuple = (
+                        _product_obj.get('product_name'), _product_obj.get('specifications')
+                    )
+                    if value_tuple == _value_tuple:
+                        is_exist = True
+                        # 如果存在，现有的加上暂存的 _product_obj.get('quantity') 数量
+                        _product_obj['quantity'] = _product_obj['quantity'] + product_obj['quantity']
+                        break
+                if not is_exist:
+                    merge_data_list.append(product_obj)
+            else:
+                merge_data_list.append(product_obj)
+        merge_dict[key] = merge_data_list
+    return merge_dict
+
+
+def remove_duplicate_product(data_list):
+    """
+    合并产品（进行去重，根据产品来去重合并）
     :param data_list:
     :return:
     """

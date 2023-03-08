@@ -2,7 +2,7 @@ from sqlalchemy import desc, asc
 from sqlalchemy.orm import aliased
 
 from app_router.models.database import db
-from app_router.models.models import AuthUser, AuthGroup, AuthApi
+from app_router.models.models import AuthUser, AuthGroup, AuthApi, AuthFunction
 from enums.enums import MenuEnum, MenuHiddenEnum
 from exceptions.user_exception import *
 from utils.authentication import pwd_context
@@ -24,6 +24,32 @@ def add_user(data):
     except:
         db.session.rollback()
         raise AddUserException
+
+
+def update_user(data):
+    """
+    更新用户信息
+    :param data:
+    :return:
+    """
+    try:
+        data['password'] = pwd_context.hash(data['password'])
+
+        auth_user_obj = AuthUser.query.filter_by(username=data['username']).first()
+        auth_user_obj.group_id = data['group_id']
+        if data.get('password'):
+            auth_user_obj.password = data['password']
+        if data.get('register_ip'):
+            auth_user_obj.register_ip = data['register_ip']
+        if data.get('status') is not None:
+            auth_user_obj.status = data['status']
+        db.session.commit()
+        db.session.flush()
+
+        return auth_user_obj
+    except:
+        db.session.rollback()
+        raise UpdateUserException
 
 
 def delete_user(username):
@@ -244,6 +270,42 @@ def add_menu(data):
         raise AddMenuException
 
 
+def add_api(data):
+    """
+    添加一条功能（api）
+    :param data:
+    :return:
+    """
+    try:
+        api_obj = AuthFunction(**data)
+        db.session.add(api_obj)
+        db.session.commit()
+        db.session.flush()
+        return api_obj.title
+    except:
+        db.session.rollback()
+        raise AddApiException
+
+
+def update_api(data):
+    """
+    更新一条功能（api）
+    :param data:
+    :return:
+    """
+    business_id = data.get('business_id')
+    try:
+        # 根据业务id查询这条数据
+        api_obj = get_auth_function_by_id(business_id=business_id)
+        if api_obj:
+            # 执行更新操作
+            api_obj.query.filter_by(business_id=business_id).update(data)
+            db.session.commit()
+    except:
+        db.session.rollback()
+        raise UpdateApiException
+
+
 def update_menu(data):
     """
     更新一条菜单（api）
@@ -289,6 +351,15 @@ def get_auth_api_by_id(business_id):
     return AuthApi.query.filter_by(business_id=business_id).first()
 
 
+def get_auth_function_by_id(business_id):
+    """
+    通过 auth_function 的 business_id 查找这条数据
+    :param business_id: 这条数据的业务id
+    :return:
+    """
+    return AuthFunction.query.filter_by(business_id=business_id).first()
+
+
 def get_menu(page, limit):
     """
     获取菜单列表
@@ -329,6 +400,76 @@ def get_menu(page, limit):
     }
 
 
+def get_api(page, limit):
+    """
+    获取功能api列表
+    :param page:
+    :param limit:
+    :return:
+    """
+    result_list = AuthFunction.query.order_by(desc('update_time')).offset(page).limit(limit).all()
+    return_api_list = []
+    for auth_api_obj in result_list:
+        permission = auth_api_obj.permission
+        auth_api_dict = auth_api_obj.as_dict()
+
+        # 用作前端显示的展示
+        # 展示菜单的权限
+        if ":" in permission:
+            permissions = permission.split(":")
+            auth_api_dict['permission'] = permissions
+        else:
+            auth_api_dict['permission'] = [permission]
+
+        return_api_list.append(auth_api_dict)
+
+    return {
+        "data": return_api_list,
+        "count": AuthFunction.query.count()
+    }
+
+
+def search_api(title, page, limit):
+    """
+    搜搜api功能
+    :param title: api名字
+    :param page:
+    :param limit:
+    :return:
+    """
+    if title:
+        result_list = AuthFunction.query.filter(AuthFunction.title.like('%{0}%'.format(title))).order_by(
+            desc('update_time')).offset(page).limit(limit).all()
+    else:
+        result_list = AuthFunction.query.order_by(desc('update_time')).offset(page).limit(limit).all()
+
+    return_api_list = []
+    for auth_api_obj in result_list:
+        permission = auth_api_obj.permission
+        auth_api_dict = auth_api_obj.as_dict()
+
+        # 用作前端显示的展示
+        # 展示菜单的权限
+        if ":" in permission:
+            permissions = permission.split(":")
+            auth_api_dict['permission'] = permissions
+        else:
+            auth_api_dict['permission'] = [permission]
+
+        return_api_list.append(auth_api_dict)
+
+    if title:
+        return {
+            "data": return_api_list,
+            "count": AuthFunction.query.filter(AuthFunction.title.like('%{}%'.format(title))).count()
+        }
+    else:
+        return {
+            "data": return_api_list,
+            "count": AuthFunction.query.count()
+        }
+
+
 def get_all_role():
     """
     获取所有的角色
@@ -357,3 +498,17 @@ def delete_menu_by_id(business_id):
     except:
         db.session.rollback()
         raise DeleteMenuException
+
+
+def delete_api_by_id(business_id):
+    """
+    通过业务id删除功能api
+    :param business_id:
+    :return:
+    """
+    try:
+        AuthFunction.query.filter_by(business_id=business_id).delete()
+        db.session.commit()
+    except:
+        db.session.rollback()
+        raise DeleteApiException
