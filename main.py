@@ -1,5 +1,4 @@
 from flask import Flask
-from flask_cors import CORS
 from flask_migrate import MigrateCommand
 from flask_script import Manager
 
@@ -12,9 +11,9 @@ from app_router.user_manager_bp.user_lib import get_current_ip
 from app_router.user_manager_bp.user_manage import user_bp
 from configs import flask_config
 from utils.authentication import pwd_context
+from flask_cors import *
 
 app = Flask(__name__, static_url_path='/static', template_folder='templates/order_system')
-CORS(app, supports_credentials=True)
 
 
 def init_db_data():
@@ -87,6 +86,7 @@ def init_db_data():
 
 
 if __name__ == '__main__':
+    CORS(app, supports_credentials=True)
     app.config.from_object(flask_config)
     # 注册蓝图
     app.register_blueprint(data_bp)

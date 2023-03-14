@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
-from datetime import datetime, timedelta
 from typing import Any, Union
 
+import jose
 from gkestor_common_logger import Logger
 from jose import jwt
 from passlib.context import CryptContext
@@ -10,6 +10,7 @@ from sqlalchemy.orm import aliased
 from app_router.models.database import db
 from app_router.models.models import AuthUser, AuthGroup, AuthFunction
 from configs.contents import ACCESS_TOKEN_EXPIRE_MINUTES, AUTH_SECRET_KEY, ALGORITHM
+from enums.enums import AuthStatusEnum
 
 logger = Logger()
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -92,25 +93,25 @@ def auth_check(user_token, api):
 
             # 当前登录的角色
             current_role = group_obj.group_name
-            # logger.info("当前用户登录的角色为：{}".format(current_role))
 
+            # 查询api功能表是否有这条api
             match_obj = AuthFunction.query.filter(AuthFunction.api_name.like('%{}%'.format(api))).first()
             if match_obj:
                 # 对权限进行匹配
                 permission = match_obj.permission
                 permissions = permission.split(":")
                 if current_role in permissions:
-                    return True
+                    return AuthStatusEnum.ok.value
                 else:
-                    return False
+                    return AuthStatusEnum.unauth.value
             else:
-                return False
+                return AuthStatusEnum.unauth.value
         else:
-            # 没有Token，那就看看数据库中这条api是不是所有权限都可访问，如果是的那就直接返回True
-            match_obj = AuthFunction.query.filter(AuthFunction.api_name.like('%{}%'.format(api))).first()
-            if match_obj:
-                return True
-            else:
-                return False
+            # 没有Token，
+            return AuthStatusEnum.illegal_token.value
+    except jose.exceptions.ExpiredSignatureError:
+        # 权限过期
+        return AuthStatusEnum.expire.value
     except:
-        return False
+        # 未知错误
+        return AuthStatusEnum.unauth.value

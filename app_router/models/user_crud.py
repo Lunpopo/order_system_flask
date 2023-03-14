@@ -1,4 +1,4 @@
-from sqlalchemy import desc, asc
+from sqlalchemy import desc, asc, or_
 from sqlalchemy.orm import aliased
 
 from app_router.models.database import db
@@ -438,8 +438,11 @@ def search_api(title, page, limit):
     :return:
     """
     if title:
-        result_list = AuthFunction.query.filter(AuthFunction.title.like('%{0}%'.format(title))).order_by(
-            desc('update_time')).offset(page).limit(limit).all()
+        # TODO ORM 没办法多个模糊查询一起
+        result_list = AuthFunction.query.filter(
+            # or_(AuthFunction.title.like('%{}%'.format(title))),
+            or_(AuthFunction.api_name.like('%{}%'.format(title)))
+        ).order_by(desc('update_time')).offset(page).limit(limit).all()
     else:
         result_list = AuthFunction.query.order_by(desc('update_time')).offset(page).limit(limit).all()
 

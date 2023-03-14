@@ -8,6 +8,7 @@ from gkestor_common_logger import Logger
 from app_router.data_display_bp.data_display_lib import upload_image_thumb, format_dealer_product
 from app_router.models import crud
 from app_router.models.crud import delete_multi_product_by_ids, delete_multi_dealer_product_by_ids
+from enums.enums import AuthCheckEnum
 from messages.messages import *
 from utils import restful
 from utils.authentication import auth_check
@@ -17,53 +18,53 @@ data_bp = Blueprint("data_display", __name__, url_prefix="/data")
 logger = Logger()
 
 
-@data_bp.route("/get_product_data", methods=["GET"])
-def get_product_data():
-    """
-    获取产品列表数据-自己的
-    :return:
-    """
-    is_login = auth_check(user_token=request.headers.get('Authorization'), api='data_display/get_product_data')
-    if not is_login:
-        return restful.unauth()
-
-    page = int(request.args.get("page"))
-    limit = int(request.args.get("limit"))
-    order_by = request.args.get("order_by")
-
-    params_dict = {"page": page, "limit": limit, "order_by": order_by}
-    logger.info("/get_product_data 前端的入参参数：\n{}".format(json.dumps(params_dict, indent=4, ensure_ascii=False)))
-
-    # 前端page从1开始
-    page -= 1
-    page = page * limit
-    # 以时间排序获取的产品数据
-    if order_by:
-        result = crud.get_product_list_limit(page=page, limit=limit, order_by=order_by)
-    else:
-        result = crud.get_product_list_limit(page=page, limit=limit)
-    result_data = result.get("data")
-    data_list = []
-    for _ in result_data:
-        _dict = _.as_dict()
-        for key, value in _dict.items():
-            if key == "img_url" and value:
-                _dict['img_url'] = "{}?{}".format(value, int(time.time()))
-            elif key == "thumb_img_url" and value:
-                _dict['thumb_img_url'] = "{}?{}".format(value, int(time.time()))
-        data_list.append(_dict)
-
-    # 统一转换成时间戳的形式
-    data_list = time_to_timestamp(data_list)
-
-    return_data = {
-        "Success": True,
-        "code": 2000,
-        "msg": "",
-        "count": result.get('count'),
-        "data": data_list
-    }
-    return restful.ok(message="返回产品列表数据", data=return_data)
+# @data_bp.route("/get_product_data", methods=["GET"])
+# def get_product_data():
+#     """
+#     获取产品列表数据-自己的
+#     :return:
+#     """
+#     auth_status = auth_check(user_token=request.headers.get('Authorization'), api='data/get_product_data')
+#     if AuthCheckEnum[auth_status].value is not True:
+#         return AuthCheckEnum[auth_status].value
+#
+#     page = int(request.args.get("page"))
+#     limit = int(request.args.get("limit"))
+#     order_by = request.args.get("order_by")
+#
+#     params_dict = {"page": page, "limit": limit, "order_by": order_by}
+#     logger.info("/get_product_data 前端的入参参数：\n{}".format(json.dumps(params_dict, indent=4, ensure_ascii=False)))
+#
+#     # 前端page从1开始
+#     page -= 1
+#     page = page * limit
+#     # 以时间排序获取的产品数据
+#     if order_by:
+#         result = crud.get_product_list_limit(page=page, limit=limit, order_by=order_by)
+#     else:
+#         result = crud.get_product_list_limit(page=page, limit=limit)
+#     result_data = result.get("data")
+#     data_list = []
+#     for _ in result_data:
+#         _dict = _.as_dict()
+#         for key, value in _dict.items():
+#             if key == "img_url" and value:
+#                 _dict['img_url'] = "{}?{}".format(value, int(time.time()))
+#             elif key == "thumb_img_url" and value:
+#                 _dict['thumb_img_url'] = "{}?{}".format(value, int(time.time()))
+#         data_list.append(_dict)
+#
+#     # 统一转换成时间戳的形式
+#     data_list = time_to_timestamp(data_list)
+#
+#     return_data = {
+#         "Success": True,
+#         "code": 2000,
+#         "msg": "",
+#         "count": result.get('count'),
+#         "data": data_list
+#     }
+#     return restful.ok(message="返回产品列表数据", data=return_data)
 
 
 @data_bp.route("/get_all_product_data", methods=["GET"])
@@ -72,9 +73,9 @@ def get_all_product_data():
     获取所有的产品列表数据——用于下载
     :return:
     """
-    is_login = auth_check(user_token=request.headers.get('Authorization'), api='data_display/get_all_product_data')
-    if not is_login:
-        return restful.unauth()
+    auth_status = auth_check(user_token=request.headers.get('Authorization'), api='data/get_all_product_data')
+    if AuthCheckEnum[auth_status].value is not True:
+        return AuthCheckEnum[auth_status].value
 
     order_by = request.args.get("order_by")
     params_dict = {"order_by": order_by}
@@ -109,9 +110,9 @@ def search_product():
     搜索产品数据
     :return:
     """
-    is_login = auth_check(user_token=request.headers.get('Authorization'), api='data_display/search_product')
-    if not is_login:
-        return restful.unauth()
+    auth_status = auth_check(user_token=request.headers.get('Authorization'), api='data/search_product')
+    if AuthCheckEnum[auth_status].value is not True:
+        return AuthCheckEnum[auth_status].value
 
     product_name = request.args.get("title")
     page = int(request.args.get("page"))
@@ -157,9 +158,9 @@ def add_product():
     新增产品-自己的货单表格
     :return:
     """
-    is_login = auth_check(user_token=request.headers.get('Authorization'), api='data_display/add_product')
-    if not is_login:
-        return restful.unauth()
+    auth_status = auth_check(user_token=request.headers.get('Authorization'), api='data/add_product')
+    if AuthCheckEnum[auth_status].value is not True:
+        return AuthCheckEnum[auth_status].value
 
     # 从前端获取参数
     product_name = request.args.get("product_name")
@@ -224,9 +225,9 @@ def update_product():
     更新产品信息-自己的货单
     :return:
     """
-    is_login = auth_check(user_token=request.headers.get('Authorization'), api='data_display/update_product')
-    if not is_login:
-        return restful.unauth()
+    auth_status = auth_check(user_token=request.headers.get('Authorization'), api='data/update_product')
+    if AuthCheckEnum[auth_status].value is not True:
+        return AuthCheckEnum[auth_status].value
 
     # 从前端获取参数
     product_name = request.args.get("product_name")
@@ -265,11 +266,6 @@ def update_product():
                 message="更新产品出错，图片文件不存在！", data={"traceback": traceback.format_exc()}
             )
 
-    # # 下载原图
-    # logger.info("开始下载原始png图像")
-    # minio_handler.fget(img_bucket_name, img_object_name, file_path=img_file_path)
-    # logger.info("下载原始png图像完成！")
-
     try:
         # 更新数据
         crud.update_product_by_business_id(data_id=business_id, data=params_dict)
@@ -288,9 +284,9 @@ def delete_product():
     根据前端传入的 业务id 删除这条产品数据
     :return:
     """
-    is_login = auth_check(user_token=request.headers.get('Authorization'), api='data_display/delete_product')
-    if not is_login:
-        return restful.unauth()
+    auth_status = auth_check(user_token=request.headers.get('Authorization'), api='data/delete_product')
+    if AuthCheckEnum[auth_status].value is not True:
+        return AuthCheckEnum[auth_status].value
 
     data = request.get_data(as_text=True)
     params_dict = json.loads(data)
@@ -314,9 +310,9 @@ def product_multi_delete():
     删除多条产品数据
     :return:
     """
-    is_login = auth_check(user_token=request.headers.get('Authorization'), api='data_display/product_multi_delete')
-    if not is_login:
-        return restful.unauth()
+    auth_status = auth_check(user_token=request.headers.get('Authorization'), api='data/product_multi_delete')
+    if AuthCheckEnum[auth_status].value is not True:
+        return AuthCheckEnum[auth_status].value
 
     try:
         data = request.get_data(as_text=True)
@@ -327,20 +323,6 @@ def product_multi_delete():
 
         if business_ids:
             # 这个批量删除可以优化
-            # for product_business_id in business_ids:
-            #     # 先查一下数据库看有没有这个数据
-            #     product_data = crud.get_product_by_business_id(business_id=product_business_id)
-            #     if product_data:  # 如果有这条数据
-            #         # 执行删除
-            #         try:
-            #             crud.delete_product_by_business_id(data_id=product_business_id)
-            #         except:
-            #             logger.error(
-            #                 "删除 产品{} 出错，详细的出错信息为：{}".format(product_business_id, traceback.format_exc())
-            #             )
-            #             return restful.server_error(
-            #                 message=multiply_delete_product_failed, data={"traceback": traceback.format_exc()}
-            #             )
             delete_multi_product_by_ids(business_ids)
 
         return restful.ok(message=multiply_delete_product_success)
@@ -356,33 +338,36 @@ def get_all_dealer_product_data():
     获取所有的经销商产品列表数据——用于下载
     :return:
     """
-    is_login = auth_check(
-        user_token=request.headers.get('Authorization'), api='data_display/get_all_dealer_product_data'
-    )
-    if not is_login:
-        return restful.unauth()
+    try:
+        auth_status = auth_check(user_token=request.headers.get('Authorization'), api='data/get_all_dealer_product_data')
+        if AuthCheckEnum[auth_status].value is not True:
+            return AuthCheckEnum[auth_status].value
 
-    product_name = request.args.get("title")
-    dealer_name = request.args.get("dealer_name")
-    order_by = request.args.get("order_by")
+        product_name = request.args.get("title")
+        dealer_name = request.args.get("dealer_name")
+        order_by = request.args.get("order_by")
 
-    params_dict = {'product_name': product_name, "dealer_name": dealer_name, "order_by": order_by}
-    logger.info(
-        "/get_all_dealer_product_data 前端的入参参数：\n{}".format(json.dumps(params_dict, indent=4, ensure_ascii=False))
-    )
+        params_dict = {'product_name': product_name, "dealer_name": dealer_name, "order_by": order_by}
+        logger.info(
+            "/get_all_dealer_product_data 前端的入参参数：\n{}".format(json.dumps(params_dict, indent=4, ensure_ascii=False))
+        )
 
-    result = crud.get_all_dealer_product(product_name=product_name, dealer_name=dealer_name, order_by=order_by)
-    result_data = result.get('data')
-    data_list = format_dealer_product(result_data)
+        result = crud.get_all_dealer_product(product_name=product_name, dealer_name=dealer_name, order_by=order_by)
+        result_data = result.get('data')
+        data_list = format_dealer_product(result_data)
 
-    return_data = {
-        "Success": True,
-        "code": 2000,
-        "msg": "",
-        "count": result.get('count'),
-        "data": data_list
-    }
-    return restful.ok(message="返回产品列表数据", data=return_data)
+        return_data = {
+            "Success": True,
+            "code": 2000,
+            "msg": "",
+            "count": result.get('count'),
+            "data": data_list
+        }
+        return restful.ok(message="下载经销商产品列表数据成功！", data=return_data)
+    except:
+        logger.error("下载经销商产品列表数据失败，详细的出错信息为：")
+        logger.error(traceback.format_exc())
+        return restful.server_error(message="下载经销商产品列表数据失败！")
 
 
 @data_bp.route("/get_dealer_list", methods=["GET"])
@@ -391,11 +376,9 @@ def get_dealer_list():
     获取经销商名单列表
     :return:
     """
-    is_login = auth_check(
-        user_token=request.headers.get('Authorization'), api='data_display/get_dealer_list'
-    )
-    if not is_login:
-        return restful.unauth()
+    auth_status = auth_check(user_token=request.headers.get('Authorization'), api='data/get_dealer_list')
+    if AuthCheckEnum[auth_status].value is not True:
+        return AuthCheckEnum[auth_status].value
 
     result = crud.get_dealer_list()
     result_data = result.get("data")
@@ -419,11 +402,9 @@ def search_dealer_product():
     搜索经销商产品数据
     :return:
     """
-    is_login = auth_check(
-        user_token=request.headers.get('Authorization'), api='data_display/search_dealer_product'
-    )
-    if not is_login:
-        return restful.unauth()
+    auth_status = auth_check(user_token=request.headers.get('Authorization'), api='data/search_dealer_product')
+    if AuthCheckEnum[auth_status].value is not True:
+        return AuthCheckEnum[auth_status].value
 
     title = request.args.get("title")
     dealer_name = request.args.get("dealer_name")
@@ -463,11 +444,9 @@ def add_dealer_product():
     新增经销商产品
     :return:
     """
-    is_login = auth_check(
-        user_token=request.headers.get('Authorization'), api='data_display/add_dealer_product'
-    )
-    if not is_login:
-        return restful.unauth()
+    auth_status = auth_check(user_token=request.headers.get('Authorization'), api='data/add_dealer_product')
+    if AuthCheckEnum[auth_status].value is not True:
+        return AuthCheckEnum[auth_status].value
 
     product_id = request.args.get("product_id")
     product_name = request.args.get("product_name")
@@ -521,11 +500,9 @@ def update_dealer_product():
     更新经销商产品数据
     :return:
     """
-    is_login = auth_check(
-        user_token=request.headers.get('Authorization'), api='data_display/update_dealer_product'
-    )
-    if not is_login:
-        return restful.unauth()
+    auth_status = auth_check(user_token=request.headers.get('Authorization'), api='data/update_dealer_product')
+    if AuthCheckEnum[auth_status].value is not True:
+        return AuthCheckEnum[auth_status].value
 
     product_id = request.args.get("product_id")
     product_name = request.args.get("product_name")
@@ -573,11 +550,9 @@ def dealer_delete_product():
     根据前端传入的 业务id 删除这条经销商产品数据
     :return:
     """
-    is_login = auth_check(
-        user_token=request.headers.get('Authorization'), api='data_display/delete_dealer_product'
-    )
-    if not is_login:
-        return restful.unauth()
+    auth_status = auth_check(user_token=request.headers.get('Authorization'), api='data/delete_dealer_product')
+    if AuthCheckEnum[auth_status].value is not True:
+        return AuthCheckEnum[auth_status].value
 
     data = request.get_data(as_text=True)
     params_dict = json.loads(data)
@@ -603,11 +578,9 @@ def dealer_product_multi_delete():
     删除多条经销商产品数据
     :return:
     """
-    is_login = auth_check(
-        user_token=request.headers.get('Authorization'), api='data_display/dealer_product_multi_delete'
-    )
-    if not is_login:
-        return restful.unauth()
+    auth_status = auth_check(user_token=request.headers.get('Authorization'), api='data/dealer_product_multi_delete')
+    if AuthCheckEnum[auth_status].value is not True:
+        return AuthCheckEnum[auth_status].value
 
     try:
         data = request.get_data(as_text=True)
@@ -622,23 +595,6 @@ def dealer_product_multi_delete():
         if business_ids:
             # 这个批量删除可以优化
             delete_multi_dealer_product_by_ids(business_ids)
-        #     for product_business_id in business_ids:
-        #
-        #         # 先查一下数据库看有没有这个数据
-        #         product_data = crud.get_dealer_product_by_business_id(business_id=product_business_id)
-        #         if product_data:  # 如果有这条数据
-        #             # 执行删除
-        #             try:
-        #                 crud.delete_dealer_product_by_business_id(data_id=product_business_id)
-        #             except:
-        #                 logger.error(
-        #                     "删除 经销商产品{} 出错，详细的出错信息为：{}".format(
-        #                         product_business_id, traceback.format_exc()
-        #                     )
-        #                 )
-        #                 return restful.server_error(
-        #                     message=multiply_delete_product_failed, data={"traceback": traceback.format_exc()}
-        #                 )
 
         return restful.ok(message=multiply_delete_product_success)
     except:

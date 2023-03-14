@@ -1,7 +1,6 @@
 import json
 from datetime import timedelta
 
-import jose
 from flask import Blueprint, request
 from gkestor_common_logger import Logger
 from jose import ExpiredSignatureError
@@ -9,6 +8,7 @@ from jose import ExpiredSignatureError
 from app_router.models import user_crud
 from app_router.user_manager_bp.user_lib import check_user, generate_routes, filter_routes_by_role, get_current_ip
 from configs.contents import ACCESS_TOKEN_EXPIRE_MINUTES
+from enums.enums import AuthCheckEnum
 from messages.messages import *
 from utils import restful
 from utils.authentication import create_access_token, decode_token, auth_check
@@ -24,12 +24,6 @@ def login():
     用户登录
     :return:
     """
-    is_login = auth_check(
-        user_token=request.headers.get('Authorization'), api='user/login'
-    )
-    if not is_login:
-        return restful.unauth()
-
     data = request.get_data(as_text=True)
     params_dict = json.loads(data)
     username = params_dict.get("username")
@@ -53,11 +47,9 @@ def delete_user():
     删除用户api
     :return:
     """
-    is_login = auth_check(
-        user_token=request.headers.get('Authorization'), api='user/delete_user'
-    )
-    if not is_login:
-        return restful.unauth()
+    auth_status = auth_check(user_token=request.headers.get('Authorization'), api='user/delete_user')
+    if AuthCheckEnum[auth_status].value is not True:
+        return AuthCheckEnum[auth_status].value
 
     data = request.get_data(as_text=True)
     params_dict = json.loads(data)
@@ -78,11 +70,9 @@ def create_user():
     新增用户api
     :return:
     """
-    is_login = auth_check(
-        user_token=request.headers.get('Authorization'), api='user/create_user'
-    )
-    if not is_login:
-        return restful.unauth()
+    auth_status = auth_check(user_token=request.headers.get('Authorization'), api='user/create_user')
+    if AuthCheckEnum[auth_status].value is not True:
+        return AuthCheckEnum[auth_status].value
 
     data = request.get_data(as_text=True)
     params_dict = json.loads(data)
@@ -116,11 +106,9 @@ def update_user():
     更新用户api
     :return:
     """
-    is_login = auth_check(
-        user_token=request.headers.get('Authorization'), api='user/update_user'
-    )
-    if not is_login:
-        return restful.unauth()
+    auth_status = auth_check(user_token=request.headers.get('Authorization'), api='user/update_user')
+    if AuthCheckEnum[auth_status].value is not True:
+        return AuthCheckEnum[auth_status].value
 
     data = request.get_data(as_text=True)
     params_dict = json.loads(data)
@@ -153,11 +141,9 @@ def user_info():
     获取用户信息 api
     :return:
     """
-    is_login = auth_check(
-        user_token=request.headers.get('Authorization'), api='user/info'
-    )
-    if not is_login:
-        return restful.unauth()
+    auth_status = auth_check(user_token=request.headers.get('Authorization'), api='user/info')
+    if AuthCheckEnum[auth_status].value is not True:
+        return AuthCheckEnum[auth_status].value
 
     try:
         user_token = request.headers.get('Authorization')
@@ -174,8 +160,6 @@ def user_info():
         return restful.ok(message="获取用户信息成功！", data=return_user_obj)
     except ExpiredSignatureError:
         return restful.token_expired(message="登录过期！")
-    except jose.exceptions.JWTError:
-        return restful.illegal_token(message="非法登录！")
     except:
         return restful.illegal_token(message="非法登录！")
 
@@ -186,11 +170,9 @@ def get_roles():
     获取角色权限信息表
     :return:
     """
-    is_login = auth_check(
-        user_token=request.headers.get('Authorization'), api='user/roles'
-    )
-    if not is_login:
-        return restful.unauth()
+    auth_status = auth_check(user_token=request.headers.get('Authorization'), api='user/roles')
+    if AuthCheckEnum[auth_status].value is not True:
+        return AuthCheckEnum[auth_status].value
 
     result = user_crud.get_all_role()
     data_list = [_.as_dict() for _ in result]
@@ -212,9 +194,9 @@ def update_role():
     更新 角色 和 所对应的前端路由
     :return:
     """
-    is_login = auth_check(user_token=request.headers.get('Authorization'), api='user/update_role')
-    if not is_login:
-        return restful.unauth()
+    auth_status = auth_check(user_token=request.headers.get('Authorization'), api='user/update_role')
+    if AuthCheckEnum[auth_status].value is not True:
+        return AuthCheckEnum[auth_status].value
 
     data = request.get_data(as_text=True)
     params_dict = json.loads(data)
@@ -247,9 +229,9 @@ def add_role():
     新增 角色 和 所对应的路由
     :return:
     """
-    is_login = auth_check(user_token=request.headers.get('Authorization'), api='user/add_role')
-    if not is_login:
-        return restful.unauth()
+    auth_status = auth_check(user_token=request.headers.get('Authorization'), api='user/add_role')
+    if AuthCheckEnum[auth_status].value is not True:
+        return AuthCheckEnum[auth_status].value
 
     data = request.get_data(as_text=True)
     params_dict = json.loads(data)
@@ -280,9 +262,9 @@ def delete_role():
     删除角色
     :return:
     """
-    is_login = auth_check(user_token=request.headers.get('Authorization'), api='user/delete_role')
-    if not is_login:
-        return restful.unauth()
+    auth_status = auth_check(user_token=request.headers.get('Authorization'), api='user/delete_role')
+    if AuthCheckEnum[auth_status].value is not True:
+        return AuthCheckEnum[auth_status].value
 
     data = request.get_data(as_text=True)
     params_dict = json.loads(data)
@@ -304,9 +286,9 @@ def get_view_routes():
     获取前端的路由表-并且根据role进行过滤
     :return:
     """
-    is_login = auth_check(user_token=request.headers.get('Authorization'), api='user/get_view_routes')
-    if not is_login:
-        return restful.unauth()
+    auth_status = auth_check(user_token=request.headers.get('Authorization'), api='user/get_view_routes')
+    if AuthCheckEnum[auth_status].value is not True:
+        return AuthCheckEnum[auth_status].value
 
     user_token = request.headers.get('Authorization')
     user_token = user_token.split("Bearer:")[-1]
@@ -329,9 +311,9 @@ def get_all_permission():
     获取所有的api权限组
     :return:
     """
-    is_login = auth_check(user_token=request.headers.get('Authorization'), api='user/get_all_permission')
-    if not is_login:
-        return restful.unauth()
+    auth_status = auth_check(user_token=request.headers.get('Authorization'), api='user/get_all_permission')
+    if AuthCheckEnum[auth_status].value is not True:
+        return AuthCheckEnum[auth_status].value
 
     group_names = user_crud.get_all_permission()
     return_data = {
@@ -349,9 +331,9 @@ def get_parent_menu():
     获取所有的父级菜单
     :return:
     """
-    is_login = auth_check(user_token=request.headers.get('Authorization'), api='user/get_parent_menu')
-    if not is_login:
-        return restful.unauth()
+    auth_status = auth_check(user_token=request.headers.get('Authorization'), api='user/get_parent_menu')
+    if AuthCheckEnum[auth_status].value is not True:
+        return AuthCheckEnum[auth_status].value
 
     result = user_crud.get_parent_menu()
     # json格式化
@@ -374,9 +356,9 @@ def routes():
     获取所有的菜单（api）也即路由
     :return:
     """
-    is_login = auth_check(user_token=request.headers.get('Authorization'), api='user/routes')
-    if not is_login:
-        return restful.unauth()
+    auth_status = auth_check(user_token=request.headers.get('Authorization'), api='user/routes')
+    if AuthCheckEnum[auth_status].value is not True:
+        return AuthCheckEnum[auth_status].value
 
     all_menu_list = user_crud.get_all_menu()
     # 返回所有的vue前端可用的路由列表（需要根据角色进行过滤）
@@ -390,9 +372,9 @@ def get_routes_by_role():
     获取该名角色所拥有的路由
     :return:
     """
-    is_login = auth_check(user_token=request.headers.get('Authorization'), api='user/get_routes_by_role')
-    if not is_login:
-        return restful.unauth()
+    auth_status = auth_check(user_token=request.headers.get('Authorization'), api='user/get_routes_by_role')
+    if AuthCheckEnum[auth_status].value is not True:
+        return AuthCheckEnum[auth_status].value
 
     role = request.args.get("role")
     all_menu_list = user_crud.get_all_menu()
@@ -409,9 +391,9 @@ def search_api():
     搜索api功能
     :return:
     """
-    is_login = auth_check(user_token=request.headers.get('Authorization'), api='user/search_api')
-    if not is_login:
-        return restful.unauth()
+    auth_status = auth_check(user_token=request.headers.get('Authorization'), api='user/search_api')
+    if AuthCheckEnum[auth_status].value is not True:
+        return AuthCheckEnum[auth_status].value
 
     title = request.args.get("title")
     page = int(request.args.get("page"))
@@ -444,9 +426,9 @@ def get_menu():
     获取菜单列表
     :return:
     """
-    is_login = auth_check(user_token=request.headers.get('Authorization'), api='user/get_menu')
-    if not is_login:
-        return restful.unauth()
+    auth_status = auth_check(user_token=request.headers.get('Authorization'), api='user/get_menu')
+    if not AuthCheckEnum[auth_status].value:
+        return AuthCheckEnum[auth_status].value
 
     page = int(request.args.get("page"))
     limit = int(request.args.get("limit"))
@@ -461,8 +443,6 @@ def get_menu():
 
     result_data = result.get("data")
     data_list = time_to_timestamp(result_data)
-
-    print(json.dumps(data_list, indent=4, ensure_ascii=False))
 
     return_data = {
         "Success": True,
@@ -480,9 +460,9 @@ def delete_menu():
     删除菜单
     :return:
     """
-    is_login = auth_check(user_token=request.headers.get('Authorization'), api='user/delete_menu')
-    if not is_login:
-        return restful.unauth()
+    auth_status = auth_check(user_token=request.headers.get('Authorization'), api='user/delete_menu')
+    if AuthCheckEnum[auth_status].value is not True:
+        return AuthCheckEnum[auth_status].value
 
     data = request.get_data(as_text=True)
     params_dict = json.loads(data)
@@ -504,9 +484,9 @@ def delete_api():
     删除功能api
     :return:
     """
-    is_login = auth_check(user_token=request.headers.get('Authorization'), api='user/delete_api')
-    if not is_login:
-        return restful.unauth()
+    auth_status = auth_check(user_token=request.headers.get('Authorization'), api='user/delete_api')
+    if AuthCheckEnum[auth_status].value is not True:
+        return AuthCheckEnum[auth_status].value
 
     data = request.get_data(as_text=True)
     params_dict = json.loads(data)
@@ -528,9 +508,9 @@ def add_api():
     新增功能api
     :return:
     """
-    is_login = auth_check(user_token=request.headers.get('Authorization'), api='user/add_api')
-    if not is_login:
-        return restful.unauth()
+    auth_status = auth_check(user_token=request.headers.get('Authorization'), api='user/add_api')
+    if AuthCheckEnum[auth_status].value is not True:
+        return AuthCheckEnum[auth_status].value
 
     data = request.get_data(as_text=True)
     params_dict = json.loads(data)
@@ -570,9 +550,9 @@ def add_menu():
     新增菜单
     :return:
     """
-    is_login = auth_check(user_token=request.headers.get('Authorization'), api='user/add_menu')
-    if not is_login:
-        return restful.unauth()
+    auth_status = auth_check(user_token=request.headers.get('Authorization'), api='user/add_menu')
+    if AuthCheckEnum[auth_status].value is not True:
+        return AuthCheckEnum[auth_status].value
 
     data = request.get_data(as_text=True)
     params_dict = json.loads(data)
@@ -626,9 +606,9 @@ def update_api():
     更新功能api
     :return:
     """
-    is_login = auth_check(user_token=request.headers.get('Authorization'), api='user/update_api')
-    if not is_login:
-        return restful.unauth()
+    auth_status = auth_check(user_token=request.headers.get('Authorization'), api='user/update_api')
+    if AuthCheckEnum[auth_status].value is not True:
+        return AuthCheckEnum[auth_status].value
 
     data = request.get_data(as_text=True)
     params_dict = json.loads(data)
@@ -666,9 +646,9 @@ def update_menu():
     更新菜单
     :return:
     """
-    is_login = auth_check(user_token=request.headers.get('Authorization'), api='user/update_menu')
-    if not is_login:
-        return restful.unauth()
+    auth_status = auth_check(user_token=request.headers.get('Authorization'), api='user/update_menu')
+    if AuthCheckEnum[auth_status].value is not True:
+        return AuthCheckEnum[auth_status].value
 
     data = request.get_data(as_text=True)
     params_dict = json.loads(data)

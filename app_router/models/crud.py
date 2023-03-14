@@ -21,7 +21,7 @@ def get_product_list_limit(page: int = 0, limit: int = 100, order_by='-update_ti
     :param order_by: 排序，例如："+product_name"
     :return:
     """
-    if order_by.startswith('-'):
+    if order_by and order_by.startswith('-'):
         # 降序
         order_name = order_by.split("-")[-1]
         if order_name in OrderNameEnum.__members__:
@@ -31,7 +31,7 @@ def get_product_list_limit(page: int = 0, limit: int = 100, order_by='-update_ti
             # 传入的 order_name 不在枚举里面，不知道的类别就用 update_time 排序
             result_list = ProductList.query.order_by(desc('update_time')).offset(page).limit(limit).all()
 
-    elif order_by.startswith('+'):
+    elif order_by and order_by.startswith('+'):
         # 升序
         order_name = order_by.split("+")[-1]
         if order_name in OrderNameEnum.__members__:
@@ -53,7 +53,7 @@ def get_all_product(order_by='-update_time'):
     :param order_by: 排序，例如："+product_name"
     :return:
     """
-    if order_by.startswith('-'):
+    if order_by and order_by.startswith('-'):
         # 降序
         order_name = order_by.split("-")[-1]
         if order_name in OrderNameEnum.__members__:
@@ -62,7 +62,7 @@ def get_all_product(order_by='-update_time'):
             # 不知道的类别就用 update_time 排序
             result_list = ProductList.query.order_by(desc('update_time')).all()
 
-    elif order_by.startswith('+'):
+    elif order_by and order_by.startswith('+'):
         # 升序
         order_name = order_by.split("+")[-1]
         if order_name in OrderNameEnum.__members__:
@@ -88,7 +88,7 @@ def get_all_dealer_product(product_name, dealer_name, order_by='-update_time'):
     """
     if product_name:
         if dealer_name:
-            if order_by.startswith('-'):
+            if order_by and order_by.startswith('-'):
                 # 降序
                 order_name = order_by.split("-")[-1]
                 if order_name in OrderNameEnum.__members__:
@@ -101,7 +101,7 @@ def get_all_dealer_product(product_name, dealer_name, order_by='-update_time'):
                         A.belong_to == dealer_name).filter(B.product_name.like('%{}%'.format(product_name))).order_by(
                         desc(A.update_time)).all()
 
-            elif order_by.startswith('+'):
+            elif order_by and order_by.startswith('+'):
                 # 升序
                 order_name = order_by.split("+")[-1]
                 if order_name in OrderNameEnum.__members__:
@@ -126,7 +126,7 @@ def get_all_dealer_product(product_name, dealer_name, order_by='-update_time'):
             }
 
         else:
-            if order_by.startswith('-'):
+            if order_by and order_by.startswith('-'):
                 # 降序
                 order_name = order_by.split("-")[-1]
                 if order_name in OrderNameEnum.__members__:
@@ -137,7 +137,7 @@ def get_all_dealer_product(product_name, dealer_name, order_by='-update_time'):
                     result_tuple = db.session.query(A, B).join(B, A.product_id == B.business_id).filter(
                         B.product_name.like('%{}%'.format(product_name))).order_by(desc(A.update)).all()
 
-            elif order_by.startswith('+'):
+            elif order_by and order_by.startswith('+'):
                 # 降序
                 order_name = order_by.split("+")[-1]
                 if order_name in OrderNameEnum.__members__:
@@ -160,7 +160,7 @@ def get_all_dealer_product(product_name, dealer_name, order_by='-update_time'):
 
     else:
         if dealer_name:
-            if order_by.startswith('-'):
+            if order_by and order_by.startswith('-'):
                 # 降序
                 order_name = order_by.split("-")[-1]
                 if order_name in OrderNameEnum.__members__:
@@ -169,7 +169,7 @@ def get_all_dealer_product(product_name, dealer_name, order_by='-update_time'):
                 else:
                     result_tuple = db.session.query(A, B).join(B, A.product_id == B.business_id).filter(
                         A.belong_to == dealer_name).order_by(desc(A.update_time)).all()
-            elif order_by.startswith('+'):
+            elif order_by and order_by.startswith('+'):
                 # 降序
                 order_name = order_by.split("+")[-1]
                 if order_name in OrderNameEnum.__members__:
@@ -188,7 +188,7 @@ def get_all_dealer_product(product_name, dealer_name, order_by='-update_time'):
             }
 
         else:
-            if order_by.startswith('-'):
+            if order_by and order_by.startswith('-'):
                 # 降序
                 order_name = order_by.split("-")[-1]
                 if order_name in OrderNameEnum.__members__:
@@ -197,7 +197,7 @@ def get_all_dealer_product(product_name, dealer_name, order_by='-update_time'):
                 else:
                     result_tuple = db.session.query(A, B).join(B, A.product_id == B.business_id).order_by(
                         desc(A.update_time)).all()
-            elif order_by.startswith('+'):
+            elif order_by and order_by.startswith('+'):
                 # 升序
                 order_name = order_by.split("+")[-1]
                 if order_name in OrderNameEnum.__members__:
@@ -250,7 +250,7 @@ def search_product(product_name: str, page: int = 0, limit: int = 100, order_by=
     :param order_by: 排序，例如："+product_name"
     :return:
     """
-    if order_by.startswith('-'):
+    if order_by and order_by.startswith('-'):
         # 降序
         order_name = order_by.split("-")[-1]
 
@@ -283,7 +283,7 @@ def search_product(product_name: str, page: int = 0, limit: int = 100, order_by=
                 "count": ProductList.query.count()
             }
 
-    elif order_by.startswith('+'):
+    elif order_by and order_by.startswith('+'):
         # 升序
         order_name = order_by.split("+")[-1]
 

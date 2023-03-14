@@ -12,7 +12,7 @@ import os
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 TEMP_DIR = os.path.join(BASE_DIR, "../tmp")
 
-MINIO_HOSTS = "127.0.0.1:9001"
+MINIO_HOSTS = "162.14.83.226:9000"
 ACCESS_KEY = "minioadmin"
 SECRET_KEY = "minioadmin"
 

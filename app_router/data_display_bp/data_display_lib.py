@@ -59,6 +59,8 @@ def upload_image_thumb(file_obj, product_name, dealer_name='myself'):
 
     filename = "{}.png".format(product_name)
 
+    if not os.path.exists(TEMP_DIR):
+        os.mkdir(TEMP_DIR)
     if not os.path.exists(current_dealer_dir):
         os.mkdir(current_dealer_dir)
     if not os.path.exists(current_dealer_img_dir):

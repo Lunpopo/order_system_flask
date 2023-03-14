@@ -84,6 +84,7 @@ def generate_routes(all_menu_query_list):
         api_parent_id = auth_api_obj.api_parent_id
         menu_type = auth_api_obj.menu_type
         if api_parent_id is None and menu_type == 0:
+            # 一级菜单
             permission = auth_api_obj.permission
             router_path = auth_api_obj.router_path
 
@@ -142,12 +143,15 @@ def generate_routes(all_menu_query_list):
                 children_name = children_api_obj.vue_name
                 children_title = children_api_obj.title
                 children_icon = children_api_obj.icon
+                children_hidden = children_api_obj.hidden
                 if children_name:
                     children_api_dict['name'] = children_name
                 if children_title:
                     children_api_dict['meta']['title'] = children_title
                 if children_icon:
                     children_api_dict['meta']['icon'] = children_icon
+                if children_hidden:
+                    children_api_dict['hidden'] = children_hidden
                 children_obj_list.append(children_api_dict)
 
             _dict['children'] = children_obj_list
