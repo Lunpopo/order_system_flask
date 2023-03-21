@@ -1,4 +1,5 @@
 import json
+import time
 from datetime import timedelta
 
 from flask import Blueprint, request
@@ -16,6 +17,12 @@ from utils.date_utils import time_to_timestamp
 
 user_bp = Blueprint("user_manage", __name__, url_prefix="/user")
 logger = Logger()
+
+
+@user_bp.route('/asyn', methods=['GET'])
+def test_asyn_one():
+    time.sleep(3)
+    return restful.ok(message='hello asyn')
 
 
 @user_bp.route("/login", methods=["POST"])
