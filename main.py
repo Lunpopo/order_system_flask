@@ -8,6 +8,7 @@ monkey.patch_all()  # 替换标准socket模块的函数和类，改成异步非�
 from app_router import create_app
 
 
+# 原始的注册方式
 # if __name__ == '__main__':
 #     CORS(app, supports_credentials=True)
 #     app.config.from_object(flask_config)
