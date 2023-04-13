@@ -298,6 +298,7 @@ class DealerList(db.Model):
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()), unique=True, nullable=False,
                    comment="哈希自动生成id")
     dealer_name = db.Column(db.String(10), nullable=False, comment="归属于哪里的经销商，经销商名称")
+    parent_dealer = db.Column(db.String(10), nullable=False, comment="拷贝哪个经销商的产品列表")
     remarks = db.Column(db.Text, nullable=True, comment="备注")
 
     # 公共字段

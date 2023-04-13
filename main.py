@@ -39,12 +39,14 @@ from app_router import create_app
 
 app = create_app()
 # 然后这里可以写 manager
+# from flask_migrate import MigrateCommand
+# from flask_script import Manager
 # manager = Manager(app)
 # manager.add_command("db", MigrateCommand)
 
 if __name__ == '__main__':
     # manager.run()
     # app.run()
-    # 不能用自带的服务器
+    # # 不能用自带的服务器
     from gevent.pywsgi import WSGIServer
     WSGIServer(("0.0.0.0", 5000), app).serve_forever()

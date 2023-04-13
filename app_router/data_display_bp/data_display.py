@@ -18,55 +18,6 @@ data_bp = Blueprint("data_display", __name__, url_prefix="/data")
 logger = Logger()
 
 
-# @data_bp.route("/get_product_data", methods=["GET"])
-# def get_product_data():
-#     """
-#     获取产品列表数据-自己的
-#     :return:
-#     """
-#     auth_status = auth_check(user_token=request.headers.get('Authorization'), api='data/get_product_data')
-#     if AuthCheckEnum[auth_status].value is not True:
-#         return AuthCheckEnum[auth_status].value
-#
-#     page = int(request.args.get("page"))
-#     limit = int(request.args.get("limit"))
-#     order_by = request.args.get("order_by")
-#
-#     params_dict = {"page": page, "limit": limit, "order_by": order_by}
-#     logger.info("/get_product_data 前端的入参参数：\n{}".format(json.dumps(params_dict, indent=4, ensure_ascii=False)))
-#
-#     # 前端page从1开始
-#     page -= 1
-#     page = page * limit
-#     # 以时间排序获取的产品数据
-#     if order_by:
-#         result = crud.get_product_list_limit(page=page, limit=limit, order_by=order_by)
-#     else:
-#         result = crud.get_product_list_limit(page=page, limit=limit)
-#     result_data = result.get("data")
-#     data_list = []
-#     for _ in result_data:
-#         _dict = _.as_dict()
-#         for key, value in _dict.items():
-#             if key == "img_url" and value:
-#                 _dict['img_url'] = "{}?{}".format(value, int(time.time()))
-#             elif key == "thumb_img_url" and value:
-#                 _dict['thumb_img_url'] = "{}?{}".format(value, int(time.time()))
-#         data_list.append(_dict)
-#
-#     # 统一转换成时间戳的形式
-#     data_list = time_to_timestamp(data_list)
-#
-#     return_data = {
-#         "Success": True,
-#         "code": 2000,
-#         "msg": "",
-#         "count": result.get('count'),
-#         "data": data_list
-#     }
-#     return restful.ok(message="返回产品列表数据", data=return_data)
-
-
 @data_bp.route("/get_all_product_data", methods=["GET"])
 def get_all_product_data():
     """
@@ -268,14 +219,17 @@ def update_product():
 
     try:
         # 更新数据
-        crud.update_product_by_business_id(data_id=business_id, data=params_dict)
-        logger.info("更新 {} 产品数据完成！".format(params_dict.get("product_name")))
+        if business_id:
+            crud.update_product_by_business_id(data_id=business_id, data=params_dict)
+            logger.info("更新 {} 产品数据完成！".format(params_dict.get("product_name")))
+        else:
+            return restful.server_error(message="产品id不能为空！")
     except:
         logger.info("更新 {} 产品 出错，详细的出错信息为：{}".format(
             params_dict.get("product_name"), traceback.format_exc())
         )
         return restful.server_error(message=add_product_failed, data={"traceback": traceback.format_exc()})
-    return restful.ok(message=add_product_success)
+    return restful.ok(message=update_product_success)
 
 
 @data_bp.route("/delete_product", methods=["POST"])
@@ -373,7 +327,7 @@ def get_all_dealer_product_data():
 @data_bp.route("/get_dealer_list", methods=["GET"])
 def get_dealer_list():
     """
-    获取经销商名单列表
+    获取所有的经销商名单列表
     :return:
     """
     auth_status = auth_check(user_token=request.headers.get('Authorization'), api='data/get_dealer_list')
@@ -394,6 +348,154 @@ def get_dealer_list():
         "data": data_list
     }
     return restful.ok(message="返回经销商名单列表", data=return_data)
+
+
+@data_bp.route("/search_dealer_list", methods=["GET"])
+def search_dealer_list():
+    """
+    搜索所有的经销商名单列表（并且分页）
+    :return:
+    """
+    auth_status = auth_check(user_token=request.headers.get('Authorization'), api='data/search_dealer_list')
+    if AuthCheckEnum[auth_status].value is not True:
+        return AuthCheckEnum[auth_status].value
+
+    # 搜索经销商名单列表
+    dealer_name = request.args.get("dealer_name")
+    page = int(request.args.get("page"))
+    limit = int(request.args.get("limit"))
+    order_by = request.args.get('order_by')
+
+    params_dict = {
+        'dealer_name': dealer_name, "page": page, "limit": limit, 'order_by': order_by
+    }
+    logger.info(
+        "/search_dealer_list 前端的入参参数：\n{}".format(json.dumps(params_dict, indent=4, ensure_ascii=False))
+    )
+
+    # 前端page从1开始
+    page -= 1
+    page = page * limit
+    result = crud.search_dealer_list(dealer_name=dealer_name, page=page, limit=limit, order_by=order_by)
+    result_data = result.get("data")
+    # json格式化
+    data_list = [_.as_dict() for _ in result_data]
+    # 统一转换成时间戳的形式
+    data_list = time_to_timestamp(data_list)
+
+    return_data = {
+        "Success": True,
+        "code": 2000,
+        "msg": "",
+        "data": data_list,
+        "count": result.get('count')
+    }
+    return restful.ok(message="返回经销商搜索名单", data=return_data)
+
+
+@data_bp.route("/add_dealer_name", methods=["POST"])
+def add_dealer_name():
+    """
+    新增一名经销商
+    :return:
+    """
+    auth_status = auth_check(user_token=request.headers.get('Authorization'), api='data/add_dealer_product')
+    if AuthCheckEnum[auth_status].value is not True:
+        return AuthCheckEnum[auth_status].value
+
+    data = request.get_data(as_text=True)
+    # 业务id的集合
+    params_dict = json.loads(data)
+    logger.info(
+        "/add_dealer_name 前端传入的参数为：\n{}".format(json.dumps(params_dict, indent=4, ensure_ascii=False))
+    )
+
+    dealer_name = params_dict.get("dealer_name")
+    # 这个新增的经销商列表以什么为基准进行创建的，比如以安仁刘总为基准进行创建一个新的经销商，所有的安仁刘总的产品都会进行复制过来
+    parent_dealer = params_dict.get('parent_dealer')
+    remarks = params_dict.get("remarks")
+
+    params_dict = {
+        "dealer_name": dealer_name,
+        "parent_dealer": parent_dealer,
+        "remarks": remarks
+    }
+
+    # 查询这个经销商名称是否已存在在数据库中
+    result = crud.dealer_name_is_exist(dealer_name=dealer_name)
+    if result:
+        logger.info("新增一个经销商名单 {} 出错，该经销商已存在！".format(dealer_name))
+        return restful.server_error(
+            message="新增经销商失败，该经销商已存在！",
+            data={"traceback": "新增一个经销商 {} 出错，该经销商已存在！".format(dealer_name)}
+        )
+
+    try:
+        # 增加数据
+        crud.add_dealer_name(data=params_dict)
+    except:
+        logger.info("新增一个 经销商名单 出错，详细的出错信息为：{}".format(traceback.format_exc()))
+        return restful.server_error(message=add_dealer_name_failed, data={"traceback": traceback.format_exc()})
+    return restful.ok(message=add_dealer_name_success)
+
+
+@data_bp.route("/add_dealer_product", methods=["POST"])
+def add_dealer_product():
+    """
+    新增经销商产品
+    :return:
+    """
+    auth_status = auth_check(user_token=request.headers.get('Authorization'), api='data/add_dealer_product')
+    if AuthCheckEnum[auth_status].value is not True:
+        return AuthCheckEnum[auth_status].value
+
+    data = request.get_data(as_text=True)
+    # 业务id的集合
+    params_dict = json.loads(data)
+    logger.info(
+        "/add_dealer_product 前端传入的参数为：\n{}".format(json.dumps(params_dict, indent=4, ensure_ascii=False))
+    )
+
+    product_id = params_dict.get("product_id")
+    product_name = params_dict.get("product_name")
+    belong_to = params_dict.get("belong_to")
+    # 出厂价
+    unit_price = params_dict.get("unit_price")
+    # 每件价格
+    price_of_piece = params_dict.get("price_of_piece")
+    # 批发价
+    wholesale_price = params_dict.get("wholesale_price")
+    suggested_retail_price = params_dict.get("suggested_retail_price")
+    scanning_price = params_dict.get("scanning_price")
+    remarks = params_dict.get("remarks")
+
+    params_dict = {
+        "product_id": product_id,
+        "belong_to": belong_to,
+        "unit_price": unit_price,
+        "price_of_piece": price_of_piece,
+        "wholesale_price": wholesale_price,
+        "suggested_retail_price": suggested_retail_price,
+        "scanning_price": scanning_price,
+        "remarks": remarks
+    }
+
+    # 查询产品是否已存在在数据库中（香型、规格、产品名、经销商名可以唯一确定一个产品）
+    result = crud.dealer_product_is_exist(product_id=product_id, belong_to=belong_to)
+    if result:
+        logger.info("新增产品 {} 出错，产品已存在！".format(product_name))
+        return restful.server_error(
+            message=add_dealer_product_failed,
+            data={"traceback": "新增产品 {} 出错，产品已存在！".format(product_name)}
+        )
+
+    try:
+        # 增加数据
+        crud.add_dealer_product(data=params_dict)
+    except:
+        logger.info("新增 经销商产品 出错，详细的出错信息为：{}".format(traceback.format_exc()))
+        return restful.server_error(message=add_dealer_product_failed, data={"traceback": traceback.format_exc()})
+    return restful.ok(message=add_dealer_product_success)
 
 
 @data_bp.route("/search_dealer_product", methods=["GET"])
@@ -436,62 +538,6 @@ def search_dealer_product():
         "data": data_list
     }
     return restful.ok(message="返回产品列表数据", data=return_data)
-
-
-@data_bp.route("/add_dealer_product", methods=["POST"])
-def add_dealer_product():
-    """
-    新增经销商产品
-    :return:
-    """
-    auth_status = auth_check(user_token=request.headers.get('Authorization'), api='data/add_dealer_product')
-    if AuthCheckEnum[auth_status].value is not True:
-        return AuthCheckEnum[auth_status].value
-
-    product_id = request.args.get("product_id")
-    product_name = request.args.get("product_name")
-    belong_to = request.args.get("belong_to")
-    # 出厂价
-    unit_price = request.args.get("unit_price")
-    # 每件价格
-    price_of_piece = request.args.get("price_of_piece")
-    # 批发价
-    wholesale_price = request.args.get("wholesale_price")
-    suggested_retail_price = request.args.get("suggested_retail_price")
-    scanning_price = request.args.get("scanning_price")
-    remarks = request.args.get("remarks")
-
-    params_dict = {
-        "product_id": product_id,
-        "belong_to": belong_to,
-        "unit_price": unit_price,
-        "price_of_piece": price_of_piece,
-        "wholesale_price": wholesale_price,
-        "suggested_retail_price": suggested_retail_price,
-        "scanning_price": scanning_price,
-        "remarks": remarks
-    }
-
-    logger.info(
-        "/add_dealer_product 前端传入的参数为：\n{}".format(json.dumps(params_dict, indent=4, ensure_ascii=False))
-    )
-
-    # 查询产品是否已存在在数据库中（香型、规格、产品名、经销商名可以唯一确定一个产品）
-    result = crud.dealer_product_is_exist(product_id=product_id, belong_to=belong_to)
-    if result:
-        logger.info("新增产品 {} 出错，产品已存在！".format(product_name))
-        return restful.server_error(
-            message=add_dealer_product_failed,
-            data={"traceback": "新增产品 {} 出错，产品已存在！".format(product_name)}
-        )
-
-    try:
-        # 增加数据
-        crud.add_dealer_product(data=params_dict)
-    except:
-        logger.info("新增 经销商产品 出错，详细的出错信息为：{}".format(traceback.format_exc()))
-        return restful.server_error(message=add_dealer_product_failed, data={"traceback": traceback.format_exc()})
-    return restful.ok(message=add_dealer_product_success)
 
 
 @data_bp.route("/update_dealer_product", methods=["POST"])
@@ -542,6 +588,70 @@ def update_dealer_product():
         )
         return restful.server_error(message=add_product_failed, data={"traceback": traceback.format_exc()})
     return restful.ok(message=add_product_success)
+
+
+@data_bp.route("/update_dealer_info", methods=["POST"])
+def update_dealer_info():
+    """
+    更新 经销商名单 信息
+    :return:
+    """
+    auth_status = auth_check(user_token=request.headers.get('Authorization'), api='data/update_dealer_info')
+    if AuthCheckEnum[auth_status].value is not True:
+        return AuthCheckEnum[auth_status].value
+
+    data = request.get_data(as_text=True)
+    params_dict = json.loads(data)
+    logger.info(
+        "data/update_dealer_info 前端传入的参数为：\n{}".format(json.dumps(params_dict, indent=4, ensure_ascii=False))
+    )
+
+    dealer_name = params_dict.get("dealer_name")
+    business_id = params_dict.get('business_id')
+    remarks = params_dict.get("remarks")
+
+    params_dict = {
+        "dealer_name": dealer_name,
+        "remarks": remarks
+    }
+
+    try:
+        # 更新数据
+        crud.update_dealer_name_by_business_id(data_id=business_id, data=params_dict)
+        logger.info("更新 {} 经销商 列表数据完成！".format(dealer_name))
+    except:
+        logger.info(
+            "更新 {} 经销商列表出错，详细的出错信息为：{}".format(dealer_name, traceback.format_exc())
+        )
+        return restful.server_error(message=update_dealer_name_failed, data={"traceback": traceback.format_exc()})
+    return restful.ok(message=update_dealer_name_success)
+
+
+@data_bp.route("/delete_dealer_name", methods=["POST"])
+def delete_dealer_name():
+    """
+    根据前端传入的 业务id 从经销商列表中删除这条经销商名字
+    :return:
+    """
+    auth_status = auth_check(user_token=request.headers.get('Authorization'), api='data/delete_dealer_name')
+    if AuthCheckEnum[auth_status].value is not True:
+        return AuthCheckEnum[auth_status].value
+
+    data = request.get_data(as_text=True)
+    params_dict = json.loads(data)
+    logger.info(
+        "/delete_dealer_name 前端传入的参数为：\n{}".format(json.dumps(params_dict, indent=4, ensure_ascii=False))
+    )
+    dealer_name = params_dict.get("dealer_name")
+    dealer_name_id = params_dict.get("business_id")
+
+    try:
+        crud.delete_dealer_name_by_id(data_id=dealer_name_id, dealer_name=dealer_name)
+        logger.info("删除经销商 {} 成功！".format(dealer_name))
+    except:
+        logger.info("删除经销商 {} 出错，详细的出错信息为：{}".format(dealer_name, traceback.format_exc()))
+        return restful.server_error(message=delete_dealer_name_failed, data={"traceback": traceback.format_exc()})
+    return restful.ok(message=delete_dealer_name_success)
 
 
 @data_bp.route("/delete_dealer_product", methods=["POST"])

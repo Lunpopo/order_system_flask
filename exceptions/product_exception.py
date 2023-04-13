@@ -26,6 +26,17 @@ class AddDealerProductException(Exception):
         return self.msg
 
 
+class AddDealerNameException(Exception):
+    """
+    添加一个经销商名单异常
+    """
+    def __init__(self, msg=add_dealer_name_failed):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+
+
 class UpdateProductException(Exception):
     """
     更新产品异常
@@ -42,6 +53,17 @@ class UpdateDealerProductException(Exception):
     更新经销商产品异常
     """
     def __init__(self, msg=update_dealer_product_failed):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+
+
+class UpdateDealerNameException(Exception):
+    """
+    更新 经销商名单 异常
+    """
+    def __init__(self, msg=update_dealer_name_failed):
         self.msg = msg
 
     def __str__(self):
@@ -68,6 +90,18 @@ class DeleteDealerProductException(Exception):
 
     def __str__(self):
         return self.msg
+
+
+class DeleteDealerNameException(Exception):
+    """
+    删除 经销商列表名单 异常
+    """
+    def __init__(self, msg=delete_dealer_name_failed):
+        self.msg = msg
+
+    def __str__(self):
+        return self.msg
+
 
 
 class MultiDeleteProductException(Exception):
