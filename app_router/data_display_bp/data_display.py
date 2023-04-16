@@ -550,19 +550,23 @@ def update_dealer_product():
     if AuthCheckEnum[auth_status].value is not True:
         return AuthCheckEnum[auth_status].value
 
-    product_id = request.args.get("product_id")
-    product_name = request.args.get("product_name")
-    belong_to = request.args.get("belong_to")
+    data = request.get_data(as_text=True)
+    # 业务id的集合
+    params_dict = json.loads(data)
+
+    product_id = params_dict.get("product_id")
+    product_name = params_dict.get("product_name")
+    belong_to = params_dict.get("belong_to")
     # 出厂价
-    unit_price = request.args.get("unit_price")
+    unit_price = params_dict.get("unit_price")
     # 每件价格
-    price_of_piece = request.args.get("price_of_piece")
+    price_of_piece = params_dict.get("price_of_piece")
     # 批发价
-    wholesale_price = request.args.get("wholesale_price")
-    suggested_retail_price = request.args.get("suggested_retail_price")
-    scanning_price = request.args.get("scanning_price")
-    business_id = request.args.get("business_id")
-    remarks = request.args.get("remarks")
+    wholesale_price = params_dict.get("wholesale_price")
+    suggested_retail_price = params_dict.get("suggested_retail_price")
+    scanning_price = params_dict.get("scanning_price")
+    business_id = params_dict.get("business_id")
+    remarks = params_dict.get("remarks")
 
     params_dict = {
         "product_id": product_id,
@@ -575,13 +579,14 @@ def update_dealer_product():
         "remarks": remarks
     }
     logger.info(
-        "/update_dealer_product 前端传入的参数为：\n{}".format(json.dumps(params_dict, indent=4, ensure_ascii=False))
+        "data/update_dealer_product 前端传入的参数为：\n{}".format(json.dumps(params_dict, indent=4, ensure_ascii=False))
     )
 
     try:
-        # 更新数据
-        crud.update_dealer_product_by_business_id(data_id=business_id, data=params_dict)
-        logger.info("更新 {} 经销商产品数据完成！".format(params_dict.get("product_name")))
+        if business_id:
+            # 更新数据
+            crud.update_dealer_product_by_business_id(data_id=business_id, data=params_dict)
+            logger.info("更新 {} 经销商产品数据完成！".format(params_dict.get("product_name")))
     except:
         logger.info(
             "更新 {} 经销商产品出错，详细的出错信息为：{}".format(params_dict.get("product_name"), traceback.format_exc())
