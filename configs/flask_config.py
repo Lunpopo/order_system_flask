@@ -30,7 +30,7 @@ SECRET_KEY = 'EjpNVSNQTyGi1VvWECj9TvC/+kq3oujee2kTfQUs8yCM6xX9Yjq52v54g+HVoknA'
 # --------snip--------
 # 配置数据库的地址
 SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://{}:{}@{}:{}/order_system_db'.format(
-    "root", quote("5Q&%ngf:<N@=;r+$"), "162.14.83.226", "3306"
+    "root", quote("111111"), "127.0.0.1", "3306"
 )
 # --------snip--------
 
