@@ -469,7 +469,7 @@ def add_purchase_order(data: dict):
         purchase_order_obj = PurchaseOrder(**data)
         db.session.add(purchase_order_obj)
         db.session.commit()
-        db.session.flush()
+        # db.session.flush()
         return purchase_order_obj
     except:
         db.session.rollback()
@@ -478,8 +478,8 @@ def add_purchase_order(data: dict):
 
 def get_products_by_purchase_order_id(data_id):
     """
-    通过订单id 获取 订货单产品的所有列表
-    :param data_id: 订单id
+    通过入库单id 获取 入库单产品的所有列表
+    :param data_id: 入库单id
     :return:
     """
     A = aliased(PurchaseOrderList)
@@ -492,7 +492,7 @@ def get_products_by_purchase_order_id(data_id):
 
 def del_purchase_order_by_id(data_id):
     """
-    通过采购订单id 删除该次采购订单，并且将采购的商品全部删除
+    通过入库单id 删除该次采购订单，并且将采购的商品全部删除
     :param data_id: 订单id
     :return:
     """
@@ -513,6 +513,21 @@ def del_purchase_order_by_id(data_id):
         raise DeletePurchaseException
 
 
+def del_purchase_product_by_id(data_id):
+    """
+    通过入库单id 删除该次入库的所有产品
+    :param data_id: 订单id
+    :return:
+    """
+    # 删除所有的入库产品
+    try:
+        PurchaseOrderList.query.filter(PurchaseOrderList.purchase_order_id == data_id).delete()
+        db.session.commit()
+    except:
+        db.session.rollback()
+        raise DeletePurchaseProductListException
+
+
 def add_purchase_product(data: dict):
     """
     新增订购单的商品列表
@@ -523,7 +538,7 @@ def add_purchase_product(data: dict):
         purchase_order_obj = PurchaseOrderList(**data)
         db.session.add(purchase_order_obj)
         db.session.commit()
-        db.session.flush()
+        # db.session.flush()
         return purchase_order_obj
     except:
         db.session.rollback()
@@ -560,11 +575,53 @@ def add_outbound_order(data: dict):
         outbound_obj = OutboundOrder(**data)
         db.session.add(outbound_obj)
         db.session.commit()
-        db.session.flush()
+        # db.session.flush()
         return outbound_obj
     except:
         db.session.rollback()
         raise AddOutboundException
+
+
+def update_outbound_by_business_id(data_id: str, data):
+    """
+    根据 业务id 更新出库单
+    :param data_id:
+    :param data:
+    :return:
+    """
+    try:
+        # 根据业务id查询这条数据
+        outbound_order_obj = OutboundOrder.query.filter_by(business_id=data_id).first()
+        if outbound_order_obj:
+            # 执行更新操作
+            OutboundOrder.query.filter(OutboundOrder.business_id == data_id).update(data)
+            db.session.commit()
+        else:
+            raise UpdateOutboundException
+    except:
+        db.session.rollback()
+        raise UpdateOutboundException
+
+
+def update_purchase_by_business_id(data_id: str, data):
+    """
+    根据 业务id 更新入库单
+    :param data_id:
+    :param data:
+    :return:
+    """
+    try:
+        # 根据业务id查询这条数据
+        purchase_order_obj = PurchaseOrder.query.filter_by(business_id=data_id).first()
+        if purchase_order_obj:
+            # 执行更新操作
+            PurchaseOrder.query.filter(PurchaseOrder.business_id == data_id).update(data)
+            db.session.commit()
+        else:
+            raise UpdatePurchaseException
+    except:
+        db.session.rollback()
+        raise UpdatePurchaseException
 
 
 def get_products_by_outbound_order_id(data_id):
@@ -576,6 +633,7 @@ def get_products_by_outbound_order_id(data_id):
     A = aliased(OutboundOrderList)
     B = aliased(DealerProductList)
     C = aliased(ProductList)
+
     result_tuple_list = db.session.query(A, C).join(B, A.dealer_product_id == B.business_id).join(
         C, B.product_id == C.business_id).filter(A.outbound_order_id == data_id).all()
     result_list = format_outbound_product(data_list=result_tuple_list)
@@ -589,6 +647,21 @@ def get_products_by_dealer_product_id(dealer_product_id):
     :return:
     """
     return DealerProductList.query.filter_by(business_id=dealer_product_id).first()
+
+
+def del_outbound_order_product(data_id):
+    """
+    通过出库单ID 删除该次出库单的所有关联商品
+    :param data_id: 出库单id
+    :return:
+    """
+    # 1. 删除所有的订购产品
+    try:
+        OutboundOrderList.query.filter(OutboundOrderList.outbound_order_id == data_id).delete()
+        db.session.commit()
+    except:
+        db.session.rollback()
+        raise DeleteOutboundProductListException
 
 
 def del_outbound_order_by_id(data_id):
@@ -624,7 +697,7 @@ def add_outbound_product(data: dict):
         outbound_obj = OutboundOrderList(**data)
         db.session.add(outbound_obj)
         db.session.commit()
-        db.session.flush()
+        # db.session.flush()
         return outbound_obj
     except:
         db.session.rollback()

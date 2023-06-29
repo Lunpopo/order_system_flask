@@ -1,3 +1,6 @@
+import traceback
+
+from gkestor_common_logger import Logger
 from sqlalchemy import desc, asc, or_
 from sqlalchemy.orm import aliased
 
@@ -6,6 +9,8 @@ from app_router.models.models import AuthUser, AuthGroup, AuthApi, AuthFunction
 from enums.enums import MenuEnum, MenuHiddenEnum
 from exceptions.user_exception import *
 from utils.authentication import pwd_context
+
+logger = Logger()
 
 
 def add_user(data):
@@ -302,6 +307,7 @@ def update_api(data):
             api_obj.query.filter_by(business_id=business_id).update(data)
             db.session.commit()
     except:
+        logger.info(traceback.format_exc())
         db.session.rollback()
         raise UpdateApiException
 
@@ -438,11 +444,10 @@ def search_api(title, page, limit):
     :return:
     """
     if title:
-        # TODO ORM 没办法多个模糊查询一起
-        result_list = AuthFunction.query.filter(
-            # or_(AuthFunction.title.like('%{}%'.format(title))),
-            or_(AuthFunction.api_name.like('%{}%'.format(title)))
-        ).order_by(desc('update_time')).offset(page).limit(limit).all()
+        # 多个模糊查询一起
+        result_list = AuthFunction.query.filter(or_(
+            AuthFunction.title.like('%{}%'.format(title)), AuthFunction.api_name.like('%{}%'.format(title))
+        )).order_by(desc('update_time')).offset(page).limit(limit).all()
     else:
         result_list = AuthFunction.query.order_by(desc('update_time')).offset(page).limit(limit).all()
 
@@ -464,7 +469,9 @@ def search_api(title, page, limit):
     if title:
         return {
             "data": return_api_list,
-            "count": AuthFunction.query.filter(AuthFunction.title.like('%{}%'.format(title))).count()
+            "count": AuthFunction.query.filter(or_(
+                AuthFunction.title.like('%{}%'.format(title)), AuthFunction.api_name.like('%{}%'.format(title))
+            )).count()
         }
     else:
         return {

@@ -340,9 +340,6 @@ def search_dealer_list(dealer_name: str, page: int = 0, limit: int = 10, order_b
             result_list = DealerList.query.order_by(desc('update_time')).offset(page).limit(limit).all()
             return {"data": result_list, "count": DealerList.query.count()}
 
-    # result_list = DealerList.query.order_by(DealerList.create_time.desc()).all()
-    # return {"data": result_list, "count": DealerList.query.count()}
-
 
 def search_product(product_name: str, page: int = 0, limit: int = 10, order_by="-update_time"):
     """

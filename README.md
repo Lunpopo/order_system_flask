@@ -6,7 +6,9 @@
 conda create -n flask python=3.7.10
 conda activate flask
 pip install -r requirements.txt
-python main.py runserver --host=0.0.0.0
+python main.py
+
+bash start.sh  # 或者使用 nohup 的方式启动
 ```
 
 ## 错误和错误的解决方式

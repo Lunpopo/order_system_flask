@@ -431,7 +431,7 @@ class OutboundOrder(db.Model):
 
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()), unique=True, nullable=False,
                    comment="哈希自动生成id")
-    title = db.Column(db.String(150), nullable=False, comment="出库单标题，例如出库安仁经销商的货")
+    title = db.Column(db.String(150), nullable=False, comment="出库单标题，例如出库刘总经销商的货")
     belong_to = db.Column(db.String(10), nullable=False, comment="归属于哪里的经销商")
     phone = db.Column(db.String(11), comment="电话号码")
     address = db.Column(db.String(150), comment="地址")

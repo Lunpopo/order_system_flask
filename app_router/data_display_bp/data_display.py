@@ -411,7 +411,7 @@ def add_dealer_name():
     )
 
     dealer_name = params_dict.get("dealer_name")
-    # 这个新增的经销商列表以什么为基准进行创建的，比如以安仁刘总为基准进行创建一个新的经销商，所有的安仁刘总的产品都会进行复制过来
+    # 这个新增的经销商列表以什么为基准进行创建的，比如以刘总为基准进行创建一个新的经销商，所有的刘总的产品都会进行复制过来
     parent_dealer = params_dict.get('parent_dealer')
     remarks = params_dict.get("remarks")
 

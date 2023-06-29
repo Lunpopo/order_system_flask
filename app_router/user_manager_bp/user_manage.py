@@ -644,6 +644,7 @@ def update_api():
             user_crud.update_api(data=update_api_dict)
             return restful.ok(message=update_api_success)
     except:
+        logger.error(update_api_failed)
         return restful.server_error(message=update_api_failed)
 
 

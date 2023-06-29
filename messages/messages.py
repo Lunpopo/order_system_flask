@@ -32,16 +32,21 @@ del_purchase_order_success = "删除入库单成功！"
 del_purchase_order_failed = "删除入库单失败！"
 add_purchase_order_product_success = "新增入库单产品成功！"
 add_purchase_order_product_failed = "新增入库单产品失败！"
+update_outbound_order_success = '更新出库单成功！'
 add_outbound_order_product_success = "新增出库单产品成功！"
 add_outbound_order_product_failed = "新增出库单产品失败！"
+update_outbound_order_failed = "更新出库单异常！"
+update_purchase_order_failed = "更新入库单异常！"
 
 del_purchase_product_list_order_failed = "删除入库单所有的产品失败！"
 del_outbound_product_list_order_failed = "删除出库单所有的产品失败！"
 add_purchase_order_not_zero = "新增入库单产品数量不能为0！"
+update_purchase_order_not_zero = "更新入库单产品数量不能为0！"
 
 add_outbound_order_success = "新增出库单成功！"
 add_outbound_order_failed = "新增出库单失败！"
 add_outbound_order_not_zero = "新增出库单产品数量不能为0！"
+update_outbound_order_not_zero = "更新出库单产品数量不能为0！"
 
 del_outbound_order_success = "删除出库单成功！"
 del_outbound_order_failed = "删除出库单失败！"
