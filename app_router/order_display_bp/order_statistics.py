@@ -148,7 +148,7 @@ def get_outbound_stock_data_list():
 @order_statistics_bp.route("/get_stock_data_list", methods=["GET"])
 def get_stock_data_list():
     """
-    获取总库存数据信息
+    获取总库存数据信息（表格展示信息）
     :return:
     """
     auth_status = auth_check(user_token=request.headers.get('Authorization'),

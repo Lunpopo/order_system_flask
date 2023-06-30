@@ -21,10 +21,15 @@ def duplicate_remove_outbound_product(outbound_product_list):
     duplicate_remove_outbound = []
     # 处理出库单
     for product_obj in outbound_product_list:
+        product_name = product_obj.get("product_name")
+        if "活动" in product_name:
+            product_name = product_name.split("（活动）")[0]
+            product_obj['product_name'] = product_name
+
         # 三个指标唯一确定一个产品：产品名、香型、规格
         _dict = {
             "product_tuple": (
-                product_obj.get('product_name'), product_obj.get('scent_type'), product_obj.get('specifications')
+                product_name, product_obj.get('scent_type'), product_obj.get('specifications')
             ),
             "product_obj": product_obj,
         }
@@ -58,10 +63,15 @@ def duplicate_remove_purchase_product(purchase_product_list):
 
     # 处理入库单
     for product_obj in purchase_product_list:
+        product_name = product_obj.get("product_name")
         # 三个指标唯一确定一个产品：产品名、香型、规格
+        if "活动" in product_name:
+            product_name = product_name.split("（活动）")[0]
+            product_obj['product_name'] = product_name
+
         _dict = {
             "product_tuple": (
-                product_obj.get('product_name'), product_obj.get('scent_type'), product_obj.get('specifications')
+                product_name, product_obj.get('scent_type'), product_obj.get('specifications')
             ),
             "product_obj": product_obj,
         }

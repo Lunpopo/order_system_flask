@@ -477,8 +477,9 @@ def search_dealer_product(title: str, dealer_name: str, page: int = 0, limit: in
 
             return {
                 "data": result_tuple,
+                # 给出了 dealer_name 进行搜索
                 "count": db.session.query(A, B).join(B, A.product_id == B.business_id).filter(
-                    A.belong_to == dealer_name).count()
+                    A.belong_to == dealer_name).filter(B.product_name.like('%{}%'.format(title))).count()
             }
 
         else:
@@ -515,7 +516,9 @@ def search_dealer_product(title: str, dealer_name: str, page: int = 0, limit: in
 
             return {
                 "data": result_tuple,
-                "count": db.session.query(A, B).join(B, A.product_id == B.business_id).count()
+                # 没有给出 dealer_name 进行搜索
+                "count": db.session.query(A, B).join(B, A.product_id == B.business_id).filter(
+                    B.product_name.like('%{}%'.format(title))).count()
             }
 
     else:
