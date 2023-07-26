@@ -8,7 +8,7 @@ from passlib.context import CryptContext
 from sqlalchemy.orm import aliased
 
 from app_router.models.database import db
-from app_router.models.models import AuthUser, AuthGroup, AuthFunction
+from app_router.models.base_models import AuthUser, AuthGroup, AuthFunction
 from configs.contents import ACCESS_TOKEN_EXPIRE_MINUTES, AUTH_SECRET_KEY, ALGORITHM
 from enums.enums import AuthStatusEnum
 
